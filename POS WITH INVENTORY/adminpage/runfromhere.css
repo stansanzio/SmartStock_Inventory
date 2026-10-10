@@ -1,0 +1,399 @@
+:root {
+        --bg: #eef2fb;
+        --panel: #ffffff;
+        --panel-border: #e1e6f0;
+        --text: #202637;
+        --blue: #526fa8;
+        --blue-deep: #3f5c92;
+        --green: #bd70dc;
+        --green-deep: #efa876;
+        --button: #f8faff;
+        --button-text: #28364f;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        min-height: 100%;
+        background:
+          radial-gradient(1px 1px at 8% 12%, rgba(255, 255, 255, .9) 98%, transparent),
+          radial-gradient(1px 1px at 20% 28%, rgba(255, 255, 255, .75) 98%, transparent),
+          radial-gradient(1px 1px at 32% 8%, rgba(255, 255, 255, .8) 98%, transparent),
+          radial-gradient(1px 1px at 49% 19%, rgba(255, 255, 255, .85) 98%, transparent),
+          radial-gradient(1px 1px at 69% 11%, rgba(255, 255, 255, .8) 98%, transparent),
+          radial-gradient(1px 1px at 84% 25%, rgba(255, 255, 255, .75) 98%, transparent),
+          radial-gradient(1px 1px at 94% 8%, rgba(255, 255, 255, .85) 98%, transparent),
+          linear-gradient(180deg, #301454 0%, #3e3984 34%, #287bc3 64%, #22c7e2 82%, #31d9e6 100%);
+        font-family: Inter, "Segoe UI", Arial, sans-serif;
+        color: #ffffff;
+        font-synthesis: none;
+        text-rendering: optimizeLegibility;
+      }
+
+      body {
+        min-height: 100vh;
+        min-height: 100svh;
+      }
+
+      .stage {
+        width: 100%;
+        max-width: none;
+        min-height: 100vh;
+        min-height: 100svh;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;  
+        margin: 0 auto;
+        padding: 72px 24px 48px;
+        isolation: isolate;
+      }
+
+      .stage::before,
+      .stage::after {
+        content: "";
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        pointer-events: none;
+      }
+
+      .stage::before {
+        z-index: 0;
+        height: clamp(190px, 32vh, 330px);
+        background: linear-gradient(180deg, #4260ad 0%, #273a83 100%);
+        clip-path: polygon(0 40%, 5% 47%, 10% 36%, 15% 52%, 21% 45%, 27% 63%, 34% 38%, 41% 58%, 48% 45%, 55% 66%, 63% 39%, 70% 58%, 78% 43%, 85% 57%, 92% 36%, 100% 50%, 100% 100%, 0 100%);
+      }
+
+      .stage::after {
+        z-index: 1;
+        height: clamp(135px, 24vh, 245px);
+        background: linear-gradient(180deg, #31246f 0%, #21134f 100%);
+        clip-path: polygon(0 42%, 7% 35%, 14% 51%, 22% 34%, 30% 52%, 38% 42%, 47% 58%, 55% 37%, 63% 48%, 72% 32%, 81% 54%, 89% 38%, 96% 49%, 100% 40%, 100% 100%, 0 100%);
+      }
+
+      .decor {
+        position: absolute;
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 2;
+      }
+
+      .decor-1, .decor-2, .decor-3 { display: none; }
+
+      .decor-4 {
+        position: absolute;
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        left: 12%;
+        top: 19%;
+        background: #ffffff;
+        opacity: 0.75;
+      }
+
+      .decor-5 {
+        position: absolute;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        right: 14%;
+        bottom: 20%;
+        background: #ffffff;
+        opacity: 0.65;
+      }
+
+      .decor-6 {
+        position: absolute;
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        right: 24%;
+        top: 23%;
+        background: #ffffff;
+        opacity: 0.75;
+      }
+
+      .brand-wrap {
+        width: min(100%, 680px);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        margin: 0;
+        position: relative;
+        z-index: 3;
+        text-align: center;
+      }
+
+      .logo-svg {
+        width: min(100%, 260px);
+        height: auto;
+        display: block;
+        margin: -22px 0 -20px;
+        filter: drop-shadow(0 10px 16px rgba(13, 18, 55, 0.22));
+      }
+
+      h1 {
+        margin: 0 0 11px;
+        font-family: "Poppins", "Segoe UI", sans-serif;
+        font-size: clamp(2rem, 4.5vw, 3rem);
+        line-height: 1.12;
+        letter-spacing: 0.055em;
+        font-weight: 500;
+        color: #ffffff;
+        text-shadow: none;
+        text-transform: uppercase;
+      }
+
+      .floating-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+        padding: 12px 14px;
+        border: 1px solid rgba(211, 222, 236, 0.9);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.75);
+        color: #31445d;
+        box-shadow: 0 5px 14px rgba(39, 61, 89, 0.06);
+      }
+
+      .info-icon {
+        width: 38px;
+        height: 38px;
+        flex: 0 0 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 11px;
+        background: #eaf1fb;
+        color: #355a91;
+        font-size: 18px;
+        font-weight: bold;
+      }
+
+      .floating-info strong {
+        display: block;
+        font-size: 0.86rem;
+        font-weight: 700;
+        margin-bottom: 3px;
+      }
+
+      .floating-info small {
+        display: block;
+        font-size: 0.76rem;
+        line-height: 1.35;
+        color: #5d6f84;
+      }
+
+      .brand-tagline {
+        max-width: 500px;
+        margin: 0;
+        color: rgba(255, 255, 255, 0.84);
+        font-size: clamp(0.95rem, 1.4vw, 1.05rem);
+        line-height: 1.6;
+      }
+
+      .feature-list {
+        display: none;
+      }
+
+      .login-panel {
+        width: min(100%, 390px);
+        position: relative;
+        z-index: 4;
+        margin-top: 22px;
+        padding: 19px 21px 20px;
+        border: 1px solid rgba(255, 255, 255, 0.26);
+        border-radius: 17px;
+        background: rgba(34, 40, 100, 0.32);
+        box-shadow: 0 14px 32px rgba(20, 24, 76, 0.2), inset 0 1px rgba(255, 255, 255, 0.12);
+        backdrop-filter: blur(12px);
+      }
+
+      .login-label {
+        display: block;
+        position: relative;
+        text-align: left;
+        margin: 0 0 5px;
+        color: #ffffff;
+        font-size: 1.08rem;
+        font-weight: 700;
+        letter-spacing: 0.01em;
+      }
+
+      .login-description {
+        margin: 0 0 15px;
+        color: rgba(255, 255, 255, 0.78);
+        font-size: 0.86rem;
+        line-height: 1.5;
+      }
+
+      .role-list {
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+      }
+
+      .role-button {
+        appearance: none;
+        position: relative;
+        overflow: hidden;
+        width: 100%;
+        min-height: 56px;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        background: rgba(255, 255, 255, 0.94);
+        color: #273854;
+        border-radius: 11px;
+        padding: 9px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 13px;
+        font: inherit;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 3px 8px rgba(28, 36, 86, 0.12);
+        transition:
+          transform 0.2s ease,
+          box-shadow 0.2s ease,
+          background 0.2s ease,
+          border-color 0.2s ease;
+      }
+
+      .role-button:hover {
+        transform: translateY(-2px);
+        border-color: #b6faff;
+        background: #ffffff;
+        box-shadow: 0 7px 16px rgba(28, 36, 86, 0.2);
+      }
+
+      .role-button:active {
+        transform: translateY(0);
+      }
+
+      .role-button:focus-visible {
+        outline: 3px solid #54f3f2;
+        outline-offset: 3px;
+      }
+
+      .icon {
+        width: 34px;
+        height: 34px;
+        flex: 0 0 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 7px;
+        border-radius: 10px;
+        background: #e7effa;
+        color: #365d95;
+      }
+
+      .icon svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      .icon svg circle { fill: currentColor; }
+      .icon svg path { stroke: currentColor; }
+
+      .role-copy {
+        min-width: 0;
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+      }
+
+      .role-copy small {
+        color: #62738a;
+        font-size: 0.78rem;
+        font-weight: 500;
+        line-height: 1.35;
+      }
+
+      .role-arrow {
+        color: #617b9e;
+        font-size: 1.35rem;
+      }
+
+      .footer {
+        position: absolute;
+        right: 16px;
+        bottom: 22px;
+        left: 16px;
+        z-index: 4;
+        text-align: center;
+        color: rgba(255, 255, 255, 0.86);
+        font-size: 0.72rem;
+        letter-spacing: 0.01em;
+      }
+
+      @media (max-width: 850px) {
+        .stage {
+          padding-top: 64px;
+        }
+      }
+
+      @media (max-width: 600px) {
+        .stage {
+          min-height: 100vh;
+          min-height: 100svh;
+          justify-content: center;
+          padding: 54px 18px 54px;
+        }
+
+        .stage::before {
+          height: 25vh;
+        }
+
+        .stage::after {
+          height: 17vh;
+        }
+
+        h1 {
+          font-size: clamp(1.75rem, 8vw, 2.35rem);
+          letter-spacing: 0.035em;
+        }
+
+        .logo-svg {
+          width: min(100%, 220px);
+          margin: -10px 0 -13px;
+        }
+
+        .brand-tagline {
+          max-width: 350px;
+          font-size: 0.9rem;
+        }
+
+        .login-panel {
+          width: min(100%, 360px);
+          margin-top: 18px;
+          padding: 17px;
+        }
+
+        .footer {
+          bottom: 14px;
+          font-size: 0.66rem;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+          animation-duration: 0.01ms !important;
+          transition-duration: 0.01ms !important;
+        }
+      }

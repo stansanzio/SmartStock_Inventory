@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#eef2fb">
+  <title>Reports | SmartStock POS</title>
+  <link rel="stylesheet" href="admin-theme.css?v=20261004-admin-v8">
+  <link rel="stylesheet" href="../page-transitions.css">
+  <style>
+    .reports-card h2 {
+      margin: 0 0 7px;
+      color: #203149;
+      font-size: 20px;
+    }
+
+    .reports-card p {
+      max-width: 680px;
+      margin: 0;
+      color: #607187;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .report-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .report-links a {
+      display: inline-flex;
+      min-height: 40px;
+      align-items: center;
+      padding: 9px 13px;
+      border: 1px solid #d6e1ed;
+      border-radius: 9px;
+      color: #245b95;
+      background: #f8fbfd;
+      font-size: 13px;
+      font-weight: 650;
+      text-decoration: none;
+    }
+
+    .report-links a:hover {
+      background: #edf6fb;
+    }
+  </style>
+</head>
+<body class="auth-pending">
+  <div class="app">
+    <aside class="sidebar" id="sidebar" aria-label="Main navigation">
+      <a class="brand" href="admindashboard.html" aria-label="SmartStock POS dashboard">
+        <img src="../images/image.png" alt="SmartStock POS">
+      </a>
+      <nav class="nav" aria-label="Admin pages"></nav>
+      <div class="sidebar-profile">
+        <div class="sidebar-profile-user">
+          <img class="profile-avatar" id="sidebar-avatar" alt="">
+          <span class="sidebar-user-copy">
+            <span class="signed-in-user" id="sidebar-user-name"></span>
+            <span class="sidebar-user-role" id="sidebar-user-role" hidden></span>
+          </span>
+        </div>
+        <a class="sidebar-switch-view" id="owner-switch-view" href="../employeepage/employeedashboard.html" hidden>Switch to Employee POS</a>
+        <button class="sidebar-logout" id="logout-button" type="button">Log Out</button>
+        <p class="logout-feedback" id="logout-feedback" role="status" aria-live="polite"></p>
+      </div>
+    </aside>
+
+    <main>
+      <header class="topbar">
+        <button class="menu-toggle" id="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false">☰</button>
+        <div class="page-heading">
+          <h1>REPORTS</h1>
+          <p>Explore sales performance and transaction history.</p>
+          <time class="today" id="today"></time>
+        </div>
+      </header>
+      <section class="content card card-wrapper reports-card" aria-labelledby="reports-heading">
+        <h2 id="reports-heading">Sales Reports</h2>
+        <p>
+          Sales performance summaries are available on the Dashboard Overview. For itemized transactions,
+          use Sales History to filter records and open individual receipts.
+        </p>
+        <div class="report-links">
+          <a href="admindashboard.html#dashboard-view">Open Dashboard Overview</a>
+          <a href="sales.html">Open Sales History</a>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="admin-profile.js"></script>
+  <script src="admin-global.js?v=20261009-admin-nav-v1"></script>
+  <script>
+    const logout = document.getElementById("logout-button");
+    const sidebar = document.getElementById("sidebar");
+    const menuToggle = document.getElementById("menu-toggle");
+
+    menuToggle.addEventListener("click", () => {
+      const isOpen = sidebar.classList.toggle("open");
+      menuToggle.setAttribute("aria-expanded", String(isOpen));
+      menuToggle.setAttribute("aria-label", isOpen ? "Close navigation" : "Open navigation");
+    });
+
+    (async () => {
+      try {
+        const response = await fetch("../api/session.php", { credentials: "same-origin" });
+        const session = await response.json();
+        if (!response.ok || !session.user) throw new Error("Your admin session has expired.");
+        window.renderAdminProfile(session.user);
+        logout.addEventListener("click", async () => {
+          logout.disabled = true;
+          try {
+            const result = await fetch("../api/logout.php", {
+              method: "POST",
+              credentials: "same-origin",
+              headers: { "Content-Type": "application/json", "X-CSRF-Token": session.csrfToken },
+              body: "{}"
+            });
+            if (!result.ok) throw new Error("Unable to log out. Please try again.");
+            window.location.href = "Login.html";
+          } catch (error) {
+            document.getElementById("logout-feedback").textContent = error.message;
+            logout.disabled = false;
+          }
+        });
+        document.body.classList.remove("auth-pending");
+      } catch {
+        window.location.href = "Login.html?error=session";
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,1060 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f3f6fb">
+  <title>Point of Sale | SmartStock POS</title>
+  <link rel="stylesheet" href="../page-transitions.css">
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+      color: #202a3b;
+      background: #f3f6fb;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+      --blue: #4569a5;
+      --blue-deep: #2f4f82;
+      --muted: #778398;
+      --line: #e6eaf1;
+    }
+    * { box-sizing: border-box; }
+    body { min-width: 320px; min-height: 100vh; margin: 0; background: #f3f6fb; }
+    button, input { font: inherit; }
+    button:focus-visible, input:focus-visible { outline: 3px solid rgba(69, 105, 165, .25); outline-offset: 2px; }
+    .topbar { min-height: 78px; display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 12px clamp(16px, 4vw, 46px); border-bottom: 1px solid #e4e9f0; background: rgba(255,255,255,.92); }
+    .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .brand img { width: 53px; height: 53px; object-fit: contain; }
+    .brand-copy { min-width: 0; }
+    .brand-copy strong { display: block; color: #23354f; font-size: 1rem; }
+    .brand-copy span { display: block; margin-top: 3px; color: var(--muted); font-size: .78rem; }
+    .account { display: flex; align-items: center; gap: 10px; }
+    .employee-avatar { width: 39px; height: 39px; flex: 0 0 39px; display: grid; place-items: center; overflow: hidden; border: 2px solid #e4ebf5; border-radius: 50%; background: #e5edf9; color: var(--blue-deep); font-weight: 750; }
+    .employee-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .employee-name { max-width: 190px; overflow: hidden; color: #39475d; font-size: .88rem; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+    .role-badge { display: inline-flex; align-items: center; padding: 5px 9px; border: 1px solid #d8e5f6; border-radius: 999px; background: #edf4ff; color: #3c5f91; font-size: .7rem; font-weight: 750; white-space: nowrap; }
+    .profile-footer { position: fixed; z-index: 20; right: 0; bottom: 0; left: 0; min-height: 70px; display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 10px clamp(16px, 4vw, 46px); border-top: 1px solid #e1e7ef; background: rgba(255,255,255,.97); box-shadow: 0 -6px 20px rgba(41,55,79,.05); }
+    .footer-profile { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .footer-profile-copy { display: grid; gap: 4px; min-width: 0; }
+    .footer-profile-copy strong { overflow: hidden; color: #35445a; font-size: .84rem; text-overflow: ellipsis; white-space: nowrap; }
+    .footer-role { width: fit-content; padding: 3px 8px; font-size: .66rem; }
+    .profile-footer .logout-button { min-width: 100px; }
+    .footer-actions { display: flex; align-items: center; gap: 8px; }
+    .switch-view-button { display: inline-flex; align-items: center; justify-content: center; border-color: #efd995; color: #76580d; background: #fff8e4; text-decoration: none; }
+    .switch-view-button:hover { border-color: #e7cc73; background: #fff2c7; }
+    .switch-view-button[hidden] { display: none; }
+    .employee-of-month-star { color: #e7a900; white-space: nowrap; }
+    .logout-button { min-height: 38px; padding: 0 13px; border: 1px solid #dce2eb; border-radius: 9px; background: #fff; color: #46536a; font-size: .83rem; font-weight: 650; cursor: pointer; }
+    .logout-button:hover { border-color: #bdc9d9; background: #f8fafd; }
+    main { width: min(1500px, 100%); margin: 0 auto; padding: 28px clamp(14px, 3.2vw, 42px) 108px; }
+    .page-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; margin-bottom: 19px; }
+    .page-heading h1 { margin: 0 0 5px; color: #1e2b40; font-size: clamp(1.55rem, 3vw, 2rem); letter-spacing: -.045em; }
+    .page-heading p { margin: 0; color: var(--muted); font-size: .9rem; }
+    .refresh-button { display: inline-flex; align-items: center; gap: 8px; min-height: 38px; padding: 0 12px; border: 1px solid #dce2eb; border-radius: 9px; background: #fff; color: #485a77; font-size: .82rem; font-weight: 650; cursor: pointer; }
+    .refresh-button:hover { background: #f8fafd; }
+    .pos-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(330px, 390px); align-items: start; gap: 20px; }
+    .panel { min-width: 0; border: 1px solid #e3e8f0; border-radius: 16px; background: #fff; box-shadow: 0 7px 22px rgba(41, 55, 79, .045); }
+    .catalog-panel { padding: clamp(16px, 2vw, 23px); }
+    .section-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 15px; margin-bottom: 17px; }
+    .section-heading h2, .cart-title h2 { margin: 0; color: #25334a; font-size: 1.16rem; letter-spacing: -.02em; }
+    .section-heading p { margin: 5px 0 0; color: var(--muted); font-size: .82rem; }
+    .product-count { flex: 0 0 auto; padding: 6px 10px; border-radius: 999px; background: #edf2fa; color: #4c6186; font-size: .75rem; font-weight: 700; }
+    .toolbar { display: grid; gap: 13px; margin-bottom: 17px; }
+    .search-wrap { position: relative; }
+    .search-icon { position: absolute; top: 50%; left: 13px; color: #8793a5; font-size: 1.15rem; transform: translateY(-52%); pointer-events: none; }
+    .search { width: 100%; min-height: 43px; padding: 10px 13px 10px 39px; border: 1px solid #dfe4ec; border-radius: 10px; background: #fbfcfe; color: #263449; }
+    .search::placeholder { color: #95a0af; }
+    .category-list { display: flex; flex-wrap: wrap; gap: 7px; }
+    .category-chip { min-height: 32px; padding: 6px 11px; border: 1px solid #e0e5ed; border-radius: 999px; background: #fff; color: #536078; font-size: .77rem; cursor: pointer; transition: color .16s ease, border-color .16s ease, background .16s ease; }
+    .category-chip:hover { border-color: #abbad2; }
+    .category-chip.active { border-color: #4569a5; background: #e9eff9; color: #2f4f82; font-weight: 700; }
+    .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 13px; }
+    .product-card { min-width: 0; padding: 0; overflow: hidden; border: 1px solid #e6eaf0; border-radius: 12px; background: #fff; text-align: left; cursor: pointer; transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease; }
+    .product-card:hover:not(:disabled) { transform: translateY(-2px); border-color: #bccae0; box-shadow: 0 8px 18px rgba(44, 66, 103, .1); }
+    .product-card:disabled { cursor: not-allowed; opacity: .58; }
+    .product-image { position: relative; width: 100%; aspect-ratio: 1.43; display: grid; place-items: center; overflow: hidden; background: linear-gradient(145deg, #eff3f8, #f7f9fc); color: #a0aabb; }
+    .product-image img { width: 100%; height: 100%; object-fit: cover; }
+    .image-placeholder { font-size: 2rem; }
+    .stock-badge { position: absolute; top: 8px; right: 8px; padding: 4px 7px; border: 1px solid rgba(255,255,255,.76); border-radius: 999px; background: rgba(255,255,255,.93); color: #546176; font-size: .65rem; font-weight: 700; }
+    .product-info { min-height: 93px; padding: 10px 11px 11px; }
+    .product-category { display: block; margin-bottom: 5px; overflow: hidden; color: #8090a6; font-size: .68rem; text-overflow: ellipsis; white-space: nowrap; }
+    .product-name { display: block; overflow: hidden; color: #2d3a4f; font-size: .85rem; font-weight: 650; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
+    .product-price { display: block; margin-top: 8px; color: #335b99; font-size: .93rem; font-weight: 750; }
+    .empty-state { grid-column: 1 / -1; padding: 38px 15px; color: #7c889b; text-align: center; }
+    .empty-state strong { display: block; margin-bottom: 5px; color: #46556c; font-size: .92rem; }
+    .cart-panel { position: sticky; top: 18px; display: flex; max-height: calc(100vh - 36px); flex-direction: column; padding: 19px; }
+    .cart-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; padding-bottom: 15px; border-bottom: 1px solid var(--line); }
+    .cart-title p { margin: 5px 0 0; color: var(--muted); font-size: .78rem; }
+    .item-count { min-width: 27px; height: 27px; display: grid; place-items: center; padding: 0 7px; border-radius: 50%; background: #edf2fa; color: #45618e; font-size: .74rem; font-weight: 750; }
+    .cart-lines { min-height: 120px; flex: 1; overflow-y: auto; overscroll-behavior: contain; }
+    .cart-empty { padding: 30px 9px; color: #8792a3; font-size: .84rem; line-height: 1.6; text-align: center; }
+    .cart-empty-icon { display: block; margin-bottom: 8px; color: #a4afbe; font-size: 1.65rem; }
+    .cart-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 10px; padding: 14px 0; border-bottom: 1px solid #edf0f4; }
+    .cart-item-main { min-width: 0; }
+    .cart-item-name { display: block; overflow: hidden; color: #344258; font-size: .84rem; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+    .cart-item-detail { display: block; margin-top: 4px; color: #8390a2; font-size: .73rem; }
+    .cart-item-total { align-self: start; color: #354760; font-size: .84rem; font-weight: 700; white-space: nowrap; }
+    .cart-controls { display: flex; align-items: center; gap: 7px; }
+    .quantity-control { display: inline-flex; align-items: center; gap: 4px; padding: 2px; border: 1px solid #e1e6ee; border-radius: 8px; background: #fafbfd; }
+    .quantity-button { width: 27px; height: 27px; display: grid; place-items: center; border: 0; border-radius: 6px; background: transparent; color: #425879; font-size: 1.05rem; cursor: pointer; }
+    .quantity-button:hover:not(:disabled) { background: #e9eff8; }
+    .quantity-button:disabled { color: #b5bdc9; cursor: not-allowed; }
+    .quantity-value { min-width: 21px; color: #35445a; font-size: .79rem; font-weight: 700; text-align: center; }
+    .remove-button { width: 29px; height: 29px; border: 0; border-radius: 7px; background: transparent; color: #8792a3; font-size: 1rem; cursor: pointer; }
+    .remove-button:hover { background: #fff0ef; color: #ad3e36; }
+    .cart-footer { padding-top: 13px; border-top: 1px solid var(--line); }
+    .totals { display: grid; gap: 9px; margin-bottom: 14px; }
+    .total-row { display: flex; justify-content: space-between; gap: 14px; color: #727f92; font-size: .84rem; }
+    .discount-total[hidden] { display: none; }
+    .discount-controls { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; margin-bottom: 12px; }
+    .discount-select { min-width: 0; min-height: 38px; padding: 7px 9px; border: 1px solid #dfe4ec; border-radius: 8px; background: #fff; color: #46536b; font-size: .76rem; }
+    .discount-button { min-height: 38px; padding: 0 11px; border: 1px solid #dce2eb; border-radius: 8px; background: #fff; color: #3f5c92; font-size: .76rem; font-weight: 700; cursor: pointer; }
+    .discount-button:disabled { opacity: .55; cursor: not-allowed; }
+    .total-row strong { color: #48566b; font-weight: 650; }
+    .total-row.grand-total { align-items: baseline; margin-top: 2px; padding-top: 11px; border-top: 1px dashed #dfe4ec; color: #2c3b52; font-size: .91rem; font-weight: 750; }
+    .total-row.grand-total strong { color: #253b5f; font-size: 1.27rem; font-weight: 800; }
+    .payment-label { display: block; margin: 0 0 7px; color: #667389; font-size: .74rem; font-weight: 700; }
+    .payment-options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+    .payment-option { position: relative; }
+    .payment-option input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+    .payment-option span { min-height: 39px; display: flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid #dfe4ec; border-radius: 9px; background: #fff; color: #58667b; font-size: .79rem; cursor: pointer; }
+    .payment-option input:checked + span { border-color: #7793bf; background: #edf2fa; color: #344f7a; font-weight: 700; }
+    .payment-option input:focus-visible + span { outline: 3px solid rgba(69,105,165,.25); outline-offset: 2px; }
+    .payment-note { margin: 0 0 12px; color: #8791a0; font-size: .75rem; line-height: 1.5; }
+    .checkout-dialog { width: min(460px, calc(100% - 28px)); max-height: min(90vh, 720px); padding: 0; overflow: auto; border: 1px solid #dfe5ed; border-radius: 16px; background: #fff; color: #25334a; box-shadow: 0 24px 80px rgba(25, 39, 61, .25); }
+    .checkout-dialog::backdrop { background: rgba(24, 35, 52, .48); backdrop-filter: blur(2px); }
+    .checkout-dialog-content { padding: 23px; }
+    .checkout-dialog-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 20px; }
+    .checkout-dialog-header h2 { margin: 0; color: #24344d; font-size: 1.2rem; }
+    .checkout-dialog-header p { margin: 5px 0 0; color: var(--muted); font-size: .82rem; line-height: 1.45; }
+    .dialog-close { width: 34px; height: 34px; flex: 0 0 auto; border: 1px solid #e1e6ed; border-radius: 9px; background: #fff; color: #637087; font-size: 1.2rem; cursor: pointer; }
+    .dialog-total { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 17px; padding: 13px 14px; border-radius: 10px; background: #f3f6fb; color: #58667b; font-size: .84rem; }
+    .dialog-total strong { color: #253b5f; font-size: 1.1rem; }
+    .payment-fields { display: grid; gap: 13px; }
+    .payment-fields[hidden] { display: none; }
+    .field-label { display: grid; gap: 6px; color: #526078; font-size: .77rem; font-weight: 700; }
+    .payment-input { width: 100%; min-height: 43px; padding: 9px 11px; border: 1px solid #dfe4ec; border-radius: 9px; background: #fbfcfe; color: #263449; }
+    .payment-input:focus { border-color: #7793bf; }
+    .change-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 11px 0 2px; color: #68758a; font-size: .84rem; }
+    .change-row strong { color: #2e6946; font-size: 1.05rem; }
+    #change-due.underpaid { color: #b42318; }
+    .payment-help { margin: -5px 0 0; color: #8791a0; font-size: .72rem; line-height: 1.45; }
+    .payment-error { margin: 12px 0 0; color: #b42318; font-size: .78rem; line-height: 1.45; }
+    .payment-error:empty { display: none; }
+    .dialog-actions { display: grid; grid-template-columns: 1fr 1.4fr; gap: 9px; margin-top: 20px; }
+    .dialog-actions .checkout-button { min-height: 44px; }
+    .cancel-payment { min-height: 44px; border: 1px solid #dfe4ec; border-radius: 9px; background: #fff; color: #58667b; font-size: .83rem; font-weight: 650; cursor: pointer; }
+    .cancel-payment:hover:not(:disabled) { background: #f7f9fc; }
+    .cancel-payment:disabled { opacity: .6; cursor: not-allowed; }
+    .checkout-button { width: 100%; min-height: 48px; display: flex; align-items: center; justify-content: center; gap: 9px; border: 0; border-radius: 10px; background: linear-gradient(135deg, #496da9, #347fca); color: #fff; font-weight: 750; box-shadow: 0 6px 13px rgba(56, 103, 168, .2); cursor: pointer; transition: filter .16s ease, transform .16s ease; }
+    .checkout-button:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.04); }
+    .checkout-button:disabled { background: #aab5c5; box-shadow: none; cursor: not-allowed; }
+    .checkout-button .checkout-amount { margin-left: auto; padding-right: 12px; }
+    .status-message { min-height: 19px; margin: 9px 0 0; color: #56705f; font-size: .75rem; line-height: 1.45; }
+    .status-message.error { color: #b42318; }
+    .notice { margin: 0 0 17px; padding: 12px 14px; border: 1px solid #cfe8d7; border-radius: 10px; background: #f0faf3; color: #286643; font-size: .86rem; line-height: 1.5; }
+    .notice[hidden] { display: none; }
+    .receipt-dialog { width: min(440px, calc(100% - 28px)); max-height: min(90vh, 760px); padding: 0; overflow: auto; border: 1px solid #dfe5ed; border-radius: 12px; background: #fff; color: #25334a; box-shadow: 0 24px 80px rgba(25, 39, 61, .25); }
+    .receipt-dialog::backdrop { background: rgba(24, 35, 52, .48); }
+    .receipt-content { padding: 22px; }
+    .receipt-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .receipt-heading h2 { margin: 0; color: #24344d; font-size: 1.2rem; }
+    .receipt-heading p, .receipt-store p { margin: 5px 0 0; color: var(--muted); font-size: .8rem; }
+    .receipt-store { padding: 18px 0 14px; border-bottom: 1px dashed #cfd6e0; text-align: center; }
+    .receipt-store strong { color: #24344d; font-size: 1.05rem; }
+    .receipt-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 9px 14px; margin: 14px 0; font-size: .78rem; }
+    .receipt-meta div { min-width: 0; }
+    .receipt-meta dt { color: var(--muted); }
+    .receipt-meta dd { margin: 3px 0 0; overflow-wrap: anywhere; color: #344258; font-weight: 650; }
+    .receipt-items-wrap { overflow-x: auto; }
+    .receipt-table { width: 100%; border-collapse: collapse; font-size: .76rem; }
+    .receipt-table th, .receipt-table td { padding: 8px 4px; border-bottom: 1px solid #edf0f4; text-align: right; white-space: nowrap; }
+    .receipt-table th:first-child, .receipt-table td:first-child { text-align: left; white-space: normal; }
+    .receipt-totals { display: grid; gap: 8px; margin: 14px 0; font-size: .82rem; }
+    .receipt-total-row { display: flex; justify-content: space-between; gap: 12px; }
+    .receipt-total-row.grand { padding-top: 10px; border-top: 1px dashed #cfd6e0; color: #253b5f; font-size: .98rem; font-weight: 800; }
+    .receipt-payment { margin: 12px 0; color: #536078; font-size: .77rem; line-height: 1.5; overflow-wrap: anywhere; }
+    .receipt-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 18px; }
+    .receipt-actions button { min-height: 42px; border: 1px solid #dce2eb; border-radius: 9px; background: #fff; color: #46536a; font-size: .83rem; font-weight: 650; cursor: pointer; }
+    .receipt-actions .print-receipt { border-color: #4569a5; background: #4569a5; color: #fff; }
+    .receipt-actions button:disabled { opacity: .55; cursor: not-allowed; }
+    @media print {
+      @page { size: 80mm 200mm; margin: 0; }
+      html, body { width: 80mm; min-width: 0; min-height: 0; margin: 0; padding: 0; background: #fff; }
+      body > * { display: none !important; }
+      #receipt-dialog[open] { position: static; display: block !important; width: 80mm; max-width: 80mm; height: auto; max-height: none; margin: 0; padding: 0; overflow: visible; border: 0; border-radius: 0; box-shadow: none; }
+      .receipt-content { padding: 3mm; }
+      .receipt-actions { display: none; }
+    }
+    .loading-grid { grid-column: 1 / -1; padding: 38px 15px; color: #7c889b; text-align: center; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+    @media (max-width: 960px) {
+      .pos-layout { grid-template-columns: minmax(0, 1fr) minmax(300px, 340px); gap: 14px; }
+      .product-grid { grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); gap: 10px; }
+      .cart-panel { padding: 16px; }
+    }
+    @media (max-width: 720px) {
+      main { padding-top: 20px; }
+      .pos-layout { grid-template-columns: 1fr; }
+      .cart-panel { position: static; max-height: none; order: 2; }
+      .cart-lines { max-height: 330px; flex: none; }
+      .product-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+      .page-heading { align-items: center; }
+    }
+    @media (max-width: 480px) {
+      .topbar { min-height: 67px; gap: 8px; padding: 8px 12px; }
+      .brand img { width: 44px; height: 44px; }
+      .brand { gap: 7px; }
+      .brand-copy strong { font-size: .9rem; }
+      .brand-copy span { font-size: .7rem; }
+      .avatar { width: 32px; height: 32px; }
+      .employee-name { max-width: 95px; font-size: .76rem; }
+      .account { gap: 7px; }
+      .top-avatar { width: 34px; height: 34px; flex-basis: 34px; }
+      main { padding: 17px 11px 100px; }
+      .page-heading { margin-bottom: 13px; }
+      .page-heading p { max-width: 250px; font-size: .78rem; }
+      .refresh-button { min-height: 35px; padding: 0 9px; font-size: .74rem; }
+      .catalog-panel { padding: 14px 11px; }
+      .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+      .product-info { min-height: 88px; padding: 9px; }
+      .product-name { font-size: .8rem; }
+      .product-price { font-size: .88rem; }
+      .cart-panel { padding: 14px; }
+      .profile-footer { min-height: 64px; gap: 9px; padding: 8px 12px; }
+      .footer-profile { gap: 8px; }
+      .footer-profile .employee-avatar { width: 36px; height: 36px; flex-basis: 36px; }
+      .footer-profile-copy strong { max-width: 155px; font-size: .78rem; }
+      .profile-footer .logout-button { min-width: 77px; min-height: 35px; padding: 0 9px; font-size: .75rem; }
+      .footer-actions { gap: 6px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="employeedashboard.html" aria-label="SmartStock POS home">
+      <img src="../images/image.png" alt="">
+      <span class="brand-copy"><strong>SmartStock POS</strong><span>Employee checkout</span></span>
+    </a>
+    <div class="account">
+      <span class="employee-avatar top-avatar" aria-hidden="true"><img id="employee-avatar-image" alt=""><span id="employee-avatar-fallback">E</span></span>
+      <span class="employee-name" id="employee-name">Employee</span>
+      <span class="role-badge" id="employee-role-header">Employee</span>
+    </div>
+  </header>
+  <main>
+    <div class="page-heading">
+      <div>
+        <h1>Point of Sale</h1>
+        <p>Find products, build an order, and complete checkout.</p>
+      </div>
+      <button class="refresh-button" id="refresh-button" type="button" aria-label="Refresh products">
+        <span aria-hidden="true">↻</span> Refresh
+      </button>
+    </div>
+    <div id="sale-notice" class="notice" role="status" hidden></div>
+    <div class="pos-layout">
+      <section class="panel catalog-panel" aria-labelledby="catalog-title">
+        <div class="section-heading">
+          <div>
+            <h2 id="catalog-title">Products</h2>
+            <p>Tap an item to add it to the current sale.</p>
+          </div>
+          <span class="product-count" id="product-count">Loading…</span>
+        </div>
+        <div class="toolbar">
+          <label class="search-wrap">
+            <span class="search-icon" aria-hidden="true">⌕</span>
+            <span class="sr-only">Search products</span>
+            <input class="search" id="product-search" type="search" placeholder="Search name or SKU…" autocomplete="off">
+          </label>
+          <div class="category-list" id="category-list" aria-label="Filter by category"></div>
+        </div>
+        <div class="product-grid" id="product-grid" aria-live="polite">
+          <div class="loading-grid">Loading products…</div>
+        </div>
+      </section>
+
+      <aside class="panel cart-panel" aria-labelledby="cart-title">
+        <div class="cart-heading">
+          <div class="cart-title">
+            <h2 id="cart-title">Current sale</h2>
+            <p id="sale-reference">Ready for checkout</p>
+          </div>
+          <span class="item-count" id="item-count" aria-label="Items in cart">0</span>
+        </div>
+        <div class="cart-lines" id="cart-lines" aria-live="polite">
+          <div class="cart-empty"><span class="cart-empty-icon" aria-hidden="true">▢</span>Your order is empty.<br>Choose a product to get started.</div>
+        </div>
+        <div class="cart-footer">
+          <div class="totals" aria-live="polite">
+            <div class="total-row"><span>Subtotal</span><strong id="subtotal">₱0.00</strong></div>
+            <div class="total-row discount-total" id="discount-total-row" hidden><span id="discount-label">PWD discount (20%)</span><strong id="discount-amount"></strong></div>
+            <div class="total-row"><span><span id="tax-label">Tax</span> <span id="tax-rate-wrap">(<span id="tax-rate">12</span>%)</span></span><strong id="tax-amount">₱0.00</strong></div>
+            <div class="total-row grand-total"><span>Total</span><strong id="grand-total">₱0.00</strong></div>
+          </div>
+          <div class="discount-controls" role="group" aria-label="Eligible customer discount">
+            <label class="sr-only" for="discount-type">Discount type</label>
+            <select class="discount-select" id="discount-type">
+              <option value="">Select PWD or Senior Citizen</option>
+              <option value="pwd">PWD (20%)</option>
+              <option value="senior">Senior Citizen (20%)</option>
+            </select>
+            <button class="discount-button" id="discount-button" type="button" disabled>Apply Discount</button>
+          </div>
+          <button class="checkout-button" id="checkout-button" type="button" disabled>
+            <span id="checkout-label">Checkout</span><span class="checkout-amount" id="checkout-total">₱0.00</span>
+          </button>
+          <p class="status-message" id="status-message" role="status" aria-live="polite"></p>
+        </div>
+      </aside>
+    </div>
+  </main>
+  <dialog class="checkout-dialog" id="checkout-dialog" aria-labelledby="checkout-dialog-title">
+    <div class="checkout-dialog-content">
+      <div class="checkout-dialog-header">
+        <div>
+          <h2 id="checkout-dialog-title">Complete payment</h2>
+          <p>Confirm payment received before recording this sale.</p>
+        </div>
+        <button class="dialog-close" id="close-checkout-dialog" type="button" aria-label="Close payment dialog">×</button>
+      </div>
+      <div class="dialog-total"><span>Amount due</span><strong id="dialog-total">₱0.00</strong></div>
+      <span class="payment-label">Payment method</span>
+      <div class="payment-options" role="radiogroup" aria-label="Payment method">
+        <label class="payment-option"><input type="radio" name="payment-method" value="cash" checked><span>Cash</span></label>
+        <label class="payment-option"><input type="radio" name="payment-method" value="card"><span>Card</span></label>
+      </div>
+      <section class="payment-fields" id="cash-fields" aria-label="Cash payment details">
+        <label class="field-label" for="cash-tendered">Cash received / tendered
+          <input class="payment-input" id="cash-tendered" type="number" min="0" max="9999999999.99" step="0.01" inputmode="decimal" autocomplete="off" placeholder="0.00">
+        </label>
+        <div class="change-row" aria-live="polite"><span>Change due</span><strong id="change-due">₱0.00</strong></div>
+      </section>
+      <section class="payment-fields" id="card-fields" aria-label="Card terminal details" hidden>
+        <label class="field-label" for="card-type">Card type
+          <select class="payment-input" id="card-type">
+            <option value="">Select card type</option>
+            <option value="Visa">Visa</option>
+            <option value="Mastercard">Mastercard</option>
+            <option value="American Express">American Express</option>
+            <option value="JCB">JCB</option>
+            <option value="Other">Other</option>
+          </select>
+        </label>
+        <label class="field-label" for="card-last-four">Last 4 digits
+          <input class="payment-input" id="card-last-four" type="text" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="off" aria-describedby="card-security-note" placeholder="1234">
+        </label>
+        <label class="field-label" for="card-reference">Approval / authorization reference
+          <input class="payment-input" id="card-reference" type="text" maxlength="100" autocomplete="off" placeholder="Reference from your EDC terminal">
+        </label>
+        <p class="payment-help" id="card-security-note">Process the payment on your external EDC terminal. Do not enter or store a full card number or PIN here.</p>
+      </section>
+      <p class="payment-error" id="payment-error" role="alert"></p>
+      <div class="dialog-actions">
+        <button class="cancel-payment" id="cancel-payment" type="button">Cancel</button>
+        <button class="checkout-button" id="complete-sale-button" type="button" disabled>
+          <span id="complete-sale-label">Complete sale</span><span class="checkout-amount" id="dialog-checkout-total">₱0.00</span>
+        </button>
+      </div>
+    </div>
+  </dialog>
+  <dialog class="receipt-dialog" id="receipt-dialog" aria-labelledby="receipt-title">
+    <div class="receipt-content">
+      <div class="receipt-heading">
+        <div><h2 id="receipt-title">Sale receipt</h2><p id="receipt-number"></p></div>
+        <button class="dialog-close" id="close-receipt" type="button" aria-label="Close receipt">×</button>
+      </div>
+      <div class="receipt-store"><strong>SmartStock POS</strong><p>Thank you for your purchase</p></div>
+      <dl class="receipt-meta">
+        <div><dt>Date</dt><dd id="receipt-date"></dd></div>
+        <div><dt>User / Cashier</dt><dd id="receipt-cashier"></dd></div>
+      </dl>
+      <div class="receipt-items-wrap">
+        <table class="receipt-table">
+          <thead><tr><th scope="col">Product</th><th scope="col">Qty</th><th scope="col">Price</th><th scope="col">Total</th></tr></thead>
+          <tbody id="receipt-items"></tbody>
+        </table>
+      </div>
+      <div class="receipt-totals">
+        <div class="receipt-total-row"><span>Subtotal</span><strong id="receipt-subtotal"></strong></div>
+        <div class="receipt-total-row" id="receipt-discount-row"><span id="receipt-discount-label"></span><strong id="receipt-discount"></strong></div>
+        <div class="receipt-total-row"><span>Tax</span><strong id="receipt-tax"></strong></div>
+        <div class="receipt-total-row grand"><span>Total</span><strong id="receipt-total"></strong></div>
+      </div>
+      <p class="receipt-payment" id="receipt-payment"></p>
+      <div class="receipt-actions">
+        <button class="print-receipt" id="print-receipt" type="button" disabled>Print receipt</button>
+        <button id="close-receipt-done" type="button">Done</button>
+      </div>
+    </div>
+  </dialog>
+  <footer class="profile-footer" aria-label="Signed-in employee profile">
+    <div class="footer-profile">
+      <span class="employee-avatar" aria-hidden="true"><img id="footer-avatar-image" alt=""><span id="footer-avatar-fallback">E</span></span>
+      <span class="footer-profile-copy">
+        <strong id="footer-employee-name">Employee</strong>
+        <span class="role-badge footer-role" id="employee-role-footer">Employee</span>
+      </span>
+    </div>
+    <div class="footer-actions">
+      <a class="logout-button switch-view-button" id="owner-switch-view" href="../adminpage/admindashboard.html" hidden>Switch to Admin</a>
+      <button class="logout-button" id="logout-button" type="button">Log Out</button>
+    </div>
+  </footer>
+  <script>
+    const POS_API = "../api/pos.php";
+    const currency = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" });
+    const productGrid = document.getElementById("product-grid");
+    const cartLines = document.getElementById("cart-lines");
+    const categoryList = document.getElementById("category-list");
+    const statusMessage = document.getElementById("status-message");
+    const cart = new Map();
+    const discountTypeSelect = document.getElementById("discount-type");
+    const discountButton = document.getElementById("discount-button");
+    const DISCOUNT_PERCENT = 20;
+    let products = [];
+    let csrfToken = "";
+    let taxRatePercent = 12;
+    let selectedCategory = "All";
+    let discountType = "";
+    let checkoutInProgress = false;
+
+    function cents(value) {
+      const [whole, fraction = ""] = String(value).split(".");
+      return Number(whole) * 100 + Number((fraction + "00").slice(0, 2));
+    }
+
+    function formatMoney(amountCents) {
+      return currency.format(amountCents / 100);
+    }
+
+    function setStatus(message, isError = false) {
+      statusMessage.textContent = message;
+      statusMessage.classList.toggle("error", isError);
+    }
+
+    async function requestJson(url, options = {}) {
+      const headers = new Headers(options.headers || {});
+      headers.set("Accept", "application/json");
+      if (options.body) {
+        headers.set("Content-Type", "application/json");
+        headers.set("X-CSRF-Token", csrfToken);
+      }
+      const response = await fetch(url, { ...options, headers, credentials: "same-origin" });
+      const contentType = response.headers.get("content-type") || "";
+      if (!contentType.includes("application/json")) {
+        throw new Error("The POS service did not return JSON. Open this app through your local XAMPP or Apache server from the project root.");
+      }
+      const result = await response.json();
+      if (response.status === 401) {
+        window.location.href = "../adminpage/employee-login.html?error=session";
+        throw new Error("Your employee session has expired.");
+      }
+      if (!response.ok) throw new Error(result.error || "The request could not be completed.");
+      return result;
+    }
+
+    function visibleProducts() {
+      const query = document.getElementById("product-search").value.trim().toLocaleLowerCase();
+      return products.filter(product => {
+        const matchesSearch = product.product_name.toLocaleLowerCase().includes(query) ||
+          product.sku.toLocaleLowerCase().includes(query);
+        const matchesCategory = selectedCategory === "All" || product.category === selectedCategory;
+        return matchesSearch && matchesCategory;
+      });
+    }
+
+    function makeEmptyState(title, detail) {
+      const empty = document.createElement("div");
+      empty.className = "empty-state";
+      const heading = document.createElement("strong");
+      heading.textContent = title;
+      const description = document.createElement("span");
+      description.textContent = detail;
+      empty.append(heading, description);
+      return empty;
+    }
+
+    function renderCategories(categories) {
+      categoryList.replaceChildren();
+      const names = ["All", ...categories];
+      if (!names.includes(selectedCategory)) selectedCategory = "All";
+      for (const name of names) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `category-chip${selectedCategory === name ? " active" : ""}`;
+        button.textContent = name;
+        button.setAttribute("aria-pressed", String(selectedCategory === name));
+        button.addEventListener("click", () => {
+          selectedCategory = name;
+          renderCategories(categories);
+          renderProducts();
+        });
+        categoryList.append(button);
+      }
+    }
+
+    function renderProducts() {
+      const matches = visibleProducts();
+      document.getElementById("product-count").textContent =
+        `${matches.length} ${matches.length === 1 ? "product" : "products"}`;
+      productGrid.replaceChildren();
+      if (matches.length === 0) {
+        productGrid.append(makeEmptyState(
+          products.length === 0 ? "No products available" : "No matching products",
+          products.length === 0 ? "Active products will appear here when they are added to inventory." : "Try another search or category."
+        ));
+        return;
+      }
+
+      for (const product of matches) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "product-card";
+        button.disabled = Number(product.stock) < 1 || checkoutInProgress;
+        button.setAttribute("aria-label", `${product.product_name}, ${currency.format(Number(product.price))}, ${product.stock} in stock`);
+
+        const imageWrapper = document.createElement("span");
+        imageWrapper.className = "product-image";
+        if (product.image_url) {
+          const image = document.createElement("img");
+          image.src = product.image_url;
+          image.alt = "";
+          image.loading = "lazy";
+          image.addEventListener("error", () => {
+            const placeholder = document.createElement("span");
+            placeholder.className = "image-placeholder";
+            placeholder.textContent = "▧";
+            image.replaceWith(placeholder);
+          }, { once: true });
+          imageWrapper.append(image);
+        } else {
+          const placeholder = document.createElement("span");
+          placeholder.className = "image-placeholder";
+          placeholder.setAttribute("aria-hidden", "true");
+          placeholder.textContent = "▧";
+          imageWrapper.append(placeholder);
+        }
+        const stockBadge = document.createElement("span");
+        stockBadge.className = "stock-badge";
+        stockBadge.textContent = product.stock > 0 ? `${product.stock} in stock` : "Out of stock";
+        imageWrapper.append(stockBadge);
+
+        const info = document.createElement("span");
+        info.className = "product-info";
+        const category = document.createElement("span");
+        category.className = "product-category";
+        category.textContent = product.category;
+        const name = document.createElement("span");
+        name.className = "product-name";
+        name.textContent = product.product_name;
+        const price = document.createElement("span");
+        price.className = "product-price";
+        price.textContent = currency.format(Number(product.price));
+        info.append(category, name, price);
+        button.append(imageWrapper, info);
+        button.addEventListener("click", () => addToCart(product.id));
+        productGrid.append(button);
+      }
+    }
+
+    function addToCart(productId) {
+      if (checkoutInProgress) return;
+      const product = products.find(item => item.id === productId);
+      if (!product || product.stock < 1) return;
+      const entry = cart.get(productId) || { quantity: 0 };
+      if (entry.quantity >= product.stock) {
+        setStatus(`Only ${product.stock} ${product.product_name} available in stock.`, true);
+        return;
+      }
+      entry.quantity++;
+      cart.set(productId, entry);
+      document.getElementById("sale-notice").hidden = true;
+      document.getElementById("sale-reference").textContent = "Ready for checkout";
+      setStatus("");
+      renderCart();
+    }
+
+    function changeQuantity(productId, change) {
+      if (checkoutInProgress) return;
+      const entry = cart.get(productId);
+      const product = products.find(item => item.id === productId);
+      if (!entry || !product) return;
+      const nextQuantity = entry.quantity + change;
+      if (nextQuantity <= 0) {
+        cart.delete(productId);
+        setStatus("");
+      } else if (nextQuantity <= product.stock) {
+        entry.quantity = nextQuantity;
+        setStatus("");
+      } else {
+        setStatus(`Only ${product.stock} ${product.product_name} available in stock.`, true);
+      }
+      renderCart();
+    }
+
+    function getTotals() {
+      const subtotalCents = [...cart.entries()].reduce((subtotal, [productId, entry]) => {
+        const product = products.find(item => item.id === productId);
+        return subtotal + (product ? cents(product.price) * entry.quantity : 0);
+      }, 0);
+      const discountCents = discountType
+        ? Math.round(subtotalCents * DISCOUNT_PERCENT / 100)
+        : 0;
+      const taxCents = discountType ? 0 : Math.round(subtotalCents * taxRatePercent / 100);
+      return {
+        subtotalCents,
+        discountCents,
+        taxCents,
+        totalCents: subtotalCents - discountCents + taxCents
+      };
+    }
+
+    function getPaymentDetails() {
+      const paymentMethod = document.querySelector('input[name="payment-method"]:checked').value;
+      if (paymentMethod === "cash") {
+        const tendered = document.getElementById("cash-tendered").value.trim();
+        if (!/^\d+(?:\.\d{1,2})?$/.test(tendered)) return null;
+        const cashTenderedCents = cents(tendered);
+        if (!Number.isSafeInteger(cashTenderedCents) || cashTenderedCents > 999999999999) return null;
+        return { paymentMethod, cashTenderedCents };
+      }
+
+      const cardType = document.getElementById("card-type").value;
+      const cardLastFour = document.getElementById("card-last-four").value.trim();
+      const authorizationReference = document.getElementById("card-reference").value.trim();
+      if (!cardType || !/^\d{4}$/.test(cardLastFour) || !authorizationReference || authorizationReference.length > 100) {
+        return null;
+      }
+      return { paymentMethod, cardType, cardLastFour, authorizationReference };
+    }
+
+    function updatePaymentForm() {
+      const paymentMethod = document.querySelector('input[name="payment-method"]:checked').value;
+      const totals = getTotals();
+      const tender = paymentMethod === "cash"
+        ? document.getElementById("cash-tendered").value.trim()
+        : "";
+      let tenderedCents = null;
+      if (/^\d+(?:\.\d{1,2})?$/.test(tender)) {
+        const parsedTenderedCents = cents(tender);
+        if (Number.isSafeInteger(parsedTenderedCents) && parsedTenderedCents <= 999999999999) {
+          tenderedCents = parsedTenderedCents;
+        }
+      }
+      document.getElementById("cash-fields").hidden = paymentMethod !== "cash";
+      document.getElementById("card-fields").hidden = paymentMethod !== "card";
+      document.getElementById("dialog-total").textContent = formatMoney(totals.totalCents);
+      document.getElementById("dialog-checkout-total").textContent = formatMoney(totals.totalCents);
+      const changeDue = document.getElementById("change-due");
+      const changeCents = tenderedCents === null ? null : tenderedCents - totals.totalCents;
+      changeDue.textContent = changeCents === null ? "—" : formatMoney(changeCents);
+      changeDue.classList.toggle("underpaid", changeCents !== null && changeCents < 0);
+      const enoughCash = paymentMethod !== "cash" ||
+        (changeCents !== null && changeCents >= 0 && tenderedCents <= 999999999999);
+      document.getElementById("complete-sale-button").disabled =
+        checkoutInProgress || cart.size === 0 || !enoughCash || getPaymentDetails() === null;
+      document.getElementById("complete-sale-label").textContent =
+        checkoutInProgress ? "Processing…" : "Complete sale";
+      document.getElementById("cancel-payment").disabled = checkoutInProgress;
+      document.getElementById("close-checkout-dialog").disabled = checkoutInProgress;
+      document.querySelectorAll('input[name="payment-method"]').forEach(input => {
+        input.disabled = checkoutInProgress;
+      });
+      document.getElementById("cash-tendered").disabled = checkoutInProgress;
+      document.getElementById("card-type").disabled = checkoutInProgress;
+      document.getElementById("card-last-four").disabled = checkoutInProgress;
+      document.getElementById("card-reference").disabled = checkoutInProgress;
+    }
+
+    function openCheckoutDialog() {
+      if (cart.size === 0 || checkoutInProgress) return;
+      setStatus("");
+      document.getElementById("payment-error").textContent = "";
+      updatePaymentForm();
+      document.getElementById("checkout-dialog").showModal();
+      if (document.querySelector('input[name="payment-method"]:checked').value === "cash") {
+        document.getElementById("cash-tendered").focus();
+      }
+    }
+
+    function closeCheckoutDialog() {
+      if (!checkoutInProgress) document.getElementById("checkout-dialog").close();
+    }
+
+    function resetPaymentForm() {
+      document.querySelector('input[name="payment-method"][value="cash"]').checked = true;
+      document.getElementById("cash-tendered").value = "";
+      document.getElementById("card-type").value = "";
+      document.getElementById("card-last-four").value = "";
+      document.getElementById("card-reference").value = "";
+      updatePaymentForm();
+    }
+
+    function showReceipt(sale, purchasedItems) {
+      const itemRows = document.getElementById("receipt-items");
+      itemRows.replaceChildren();
+      for (const item of purchasedItems) {
+        const row = document.createElement("tr");
+        const product = document.createElement("td");
+        const quantity = document.createElement("td");
+        const price = document.createElement("td");
+        const total = document.createElement("td");
+        product.textContent = item.productName;
+        quantity.textContent = item.quantity.toLocaleString();
+        price.textContent = formatMoney(item.unitPriceCents);
+        total.textContent = formatMoney(item.lineTotalCents);
+        row.append(product, quantity, price, total);
+        itemRows.append(row);
+      }
+
+      document.getElementById("receipt-number").textContent = `Sale #${sale.id}`;
+      document.getElementById("receipt-date").textContent = new Intl.DateTimeFormat(undefined, {
+        dateStyle: "medium",
+        timeStyle: "medium"
+      }).format(new Date(String(sale.createdAt).replace(" ", "T")));
+      document.getElementById("receipt-cashier").textContent = sale.cashierName || "Employee";
+      document.getElementById("receipt-subtotal").textContent = formatMoney(cents(sale.subtotal));
+      document.getElementById("receipt-discount-label").textContent =
+        sale.discountType
+          ? `${sale.discountType === "pwd" ? "PWD" : "Senior Citizen"} discount (${sale.discountPercent}%)`
+          : "Discount";
+      const discountAmountCents = cents(sale.discountAmount || "0.00");
+      document.getElementById("receipt-discount").textContent = discountAmountCents > 0
+        ? `-${formatMoney(discountAmountCents)}`
+        : formatMoney(0);
+      document.getElementById("receipt-tax").textContent =
+        sale.discountType ? "VAT exempt" : `${formatMoney(cents(sale.taxAmount))} (${sale.taxRatePercent}%)`;
+      document.getElementById("receipt-total").textContent = formatMoney(cents(sale.total));
+      document.getElementById("receipt-payment").textContent = sale.paymentMethod === "cash"
+        ? `Cash received: ${formatMoney(cents(sale.cashTendered))}. Change: ${formatMoney(cents(sale.changeGiven))}.`
+        : `${sale.cardType} ending ${sale.cardLastFour}. Approval: ${sale.authorizationReference}.`;
+
+      const printButton = document.getElementById("print-receipt");
+      printButton.disabled = false;
+      document.getElementById("receipt-dialog").showModal();
+      window.setTimeout(() => {
+        if (document.getElementById("receipt-dialog").open) window.print();
+      }, 250);
+    }
+
+    function printReceipt() {
+      const receiptDialog = document.getElementById("receipt-dialog");
+      if (!receiptDialog.open || document.getElementById("print-receipt").disabled) return;
+      window.print();
+    }
+
+    function renderCart() {
+      cartLines.replaceChildren();
+      const entries = [...cart.entries()];
+      if (entries.length === 0 && discountType) {
+        discountType = "";
+        discountTypeSelect.value = "";
+      }
+      document.getElementById("item-count").textContent =
+        String(entries.reduce((total, [, item]) => total + item.quantity, 0));
+      if (entries.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "cart-empty";
+        const icon = document.createElement("span");
+        icon.className = "cart-empty-icon";
+        icon.setAttribute("aria-hidden", "true");
+        icon.textContent = "▢";
+        empty.append(icon, document.createTextNode("Your order is empty."));
+        empty.append(document.createElement("br"), document.createTextNode("Choose a product to get started."));
+        cartLines.append(empty);
+      } else {
+        for (const [productId, entry] of entries) {
+          const product = products.find(item => item.id === productId);
+          if (!product) continue;
+          const item = document.createElement("div");
+          item.className = "cart-item";
+          const main = document.createElement("div");
+          main.className = "cart-item-main";
+          const name = document.createElement("span");
+          name.className = "cart-item-name";
+          name.textContent = product.product_name;
+          const detail = document.createElement("span");
+          detail.className = "cart-item-detail";
+          detail.textContent = `${currency.format(Number(product.price))} each`;
+          main.append(name, detail);
+          const lineTotal = document.createElement("strong");
+          lineTotal.className = "cart-item-total";
+          lineTotal.textContent = formatMoney(cents(product.price) * entry.quantity);
+          const controls = document.createElement("div");
+          controls.className = "cart-controls";
+          const quantityControl = document.createElement("div");
+          quantityControl.className = "quantity-control";
+          const minus = document.createElement("button");
+          minus.className = "quantity-button";
+          minus.type = "button";
+          minus.textContent = "−";
+          minus.setAttribute("aria-label", `Decrease ${product.product_name} quantity`);
+          minus.disabled = checkoutInProgress;
+          minus.addEventListener("click", () => changeQuantity(productId, -1));
+          const quantity = document.createElement("span");
+          quantity.className = "quantity-value";
+          quantity.textContent = String(entry.quantity);
+          const plus = document.createElement("button");
+          plus.className = "quantity-button";
+          plus.type = "button";
+          plus.textContent = "+";
+          plus.setAttribute("aria-label", `Increase ${product.product_name} quantity`);
+          plus.disabled = checkoutInProgress || entry.quantity >= product.stock;
+          plus.addEventListener("click", () => changeQuantity(productId, 1));
+          quantityControl.append(minus, quantity, plus);
+          const remove = document.createElement("button");
+          remove.className = "remove-button";
+          remove.type = "button";
+          remove.textContent = "×";
+          remove.setAttribute("aria-label", `Remove ${product.product_name} from order`);
+          remove.disabled = checkoutInProgress;
+          remove.addEventListener("click", () => {
+            cart.delete(productId);
+            setStatus("");
+            renderCart();
+          });
+          controls.append(quantityControl, remove);
+          item.append(main, lineTotal, controls);
+          cartLines.append(item);
+        }
+      }
+
+      const totals = getTotals();
+      document.getElementById("subtotal").textContent = formatMoney(totals.subtotalCents);
+      document.getElementById("discount-total-row").hidden = !discountType;
+      document.getElementById("discount-label").textContent =
+        `${discountType === "pwd" ? "PWD" : "Senior Citizen"} discount (${DISCOUNT_PERCENT}%)`;
+      document.getElementById("discount-amount").textContent = `-${formatMoney(totals.discountCents)}`;
+      document.getElementById("tax-label").textContent = discountType ? "VAT exempt" : "Tax";
+      document.getElementById("tax-rate-wrap").hidden = Boolean(discountType);
+      document.getElementById("tax-amount").textContent = formatMoney(totals.taxCents);
+      document.getElementById("grand-total").textContent = formatMoney(totals.totalCents);
+      document.getElementById("checkout-total").textContent = formatMoney(totals.totalCents);
+      document.getElementById("checkout-button").disabled = entries.length === 0 || checkoutInProgress;
+      document.getElementById("checkout-label").textContent = "Checkout";
+      discountTypeSelect.disabled = checkoutInProgress || entries.length === 0 || Boolean(discountType);
+      discountButton.disabled = checkoutInProgress || entries.length === 0 || (!discountType && !discountTypeSelect.value);
+      discountButton.textContent = discountType ? "Remove Discount" : "Apply Discount";
+      updatePaymentForm();
+      renderProducts();
+    }
+
+    function setProfileName(element, displayName, isEmployeeOfMonth) {
+      element.replaceChildren(document.createTextNode(displayName));
+      element.title = isEmployeeOfMonth ? `${displayName} — Employee of the Month` : displayName;
+      if (isEmployeeOfMonth) {
+        const star = document.createElement("span");
+        star.className = "employee-of-month-star";
+        star.textContent = " ⭐";
+        star.setAttribute("aria-label", "Employee of the Month");
+        element.append(star);
+      }
+    }
+
+    async function loadProducts(showError = true) {
+      const refreshButton = document.getElementById("refresh-button");
+      refreshButton.disabled = true;
+      try {
+        const result = await requestJson(POS_API, { cache: "no-store" });
+        products = result.products;
+        let removedItems = 0;
+        for (const productId of cart.keys()) {
+          if (!products.some(product => product.id === productId)) {
+            cart.delete(productId);
+            removedItems++;
+          }
+        }
+        csrfToken = result.csrfToken;
+        taxRatePercent = Number(result.taxRatePercent);
+        document.getElementById("tax-rate").textContent = String(taxRatePercent);
+        const employeeName = result.employee.displayName;
+        const initials = employeeName.trim().charAt(0).toLocaleUpperCase() || "E";
+        setProfileName(
+          document.getElementById("employee-name"),
+          employeeName,
+          result.employee.isEmployeeOfMonth
+        );
+        setProfileName(
+          document.getElementById("footer-employee-name"),
+          employeeName,
+          result.employee.isEmployeeOfMonth
+        );
+        document.getElementById("employee-role-header").textContent = result.employee.role;
+        document.getElementById("employee-role-footer").textContent = result.employee.role;
+        document.getElementById("owner-switch-view").hidden = !result.employee.isOwner;
+        for (const [imageId, fallbackId] of [
+          ["employee-avatar-image", "employee-avatar-fallback"],
+          ["footer-avatar-image", "footer-avatar-fallback"]
+        ]) {
+          const image = document.getElementById(imageId);
+          const fallback = document.getElementById(fallbackId);
+          fallback.textContent = initials;
+          if (result.employee.avatarUrl) {
+            image.src = result.employee.avatarUrl;
+            image.alt = `${employeeName}'s avatar`;
+            image.hidden = false;
+            fallback.hidden = true;
+            image.onerror = () => {
+              image.hidden = true;
+              fallback.hidden = false;
+            };
+          } else {
+            image.hidden = true;
+            fallback.hidden = false;
+          }
+        }
+        renderCategories(result.categories);
+        renderProducts();
+        renderCart();
+        if (removedItems > 0) {
+          setStatus(`${removedItems} unavailable item${removedItems === 1 ? " was" : "s were"} removed from the order.`, true);
+        } else if (showError) {
+          setStatus("");
+        }
+      } catch (error) {
+        if (showError) {
+          setStatus(error.message, true);
+          if (products.length === 0) productGrid.replaceChildren(makeEmptyState("Could not load products", error.message));
+        }
+      } finally {
+        refreshButton.disabled = false;
+      }
+    }
+
+    function refreshInterface() {
+      window.location.reload();
+    }
+
+    async function completeSale() {
+      const payment = getPaymentDetails();
+      const totals = getTotals();
+      if (cart.size === 0 || checkoutInProgress || !payment) return;
+      if (payment.paymentMethod === "cash" && payment.cashTenderedCents < totals.totalCents) return;
+      checkoutInProgress = true;
+      setStatus("");
+      renderCart();
+      const items = [...cart.entries()].map(([productId, entry]) => ({
+        productId,
+        quantity: entry.quantity
+      }));
+      const paymentPayload = payment.paymentMethod === "cash"
+        ? {
+          paymentMethod: payment.paymentMethod,
+          cashTendered: `${Math.floor(payment.cashTenderedCents / 100)}.${String(payment.cashTenderedCents % 100).padStart(2, "0")}`
+        }
+        : {
+          paymentMethod: payment.paymentMethod,
+          cardType: payment.cardType,
+          cardLastFour: payment.cardLastFour,
+          authorizationReference: payment.authorizationReference
+        };
+      try {
+        const result = await requestJson(POS_API, {
+          method: "POST",
+          body: JSON.stringify({ items, ...paymentPayload, discountType })
+        });
+        const purchasedItems = result.sale.items;
+        cart.clear();
+        const notice = document.getElementById("sale-notice");
+        notice.hidden = false;
+        const paymentReceipt = result.sale.paymentMethod === "cash"
+          ? `Cash received ${formatMoney(cents(result.sale.cashTendered))}; change ${formatMoney(cents(result.sale.changeGiven))}.`
+          : `${result.sale.cardType} ending ${result.sale.cardLastFour}; approval ${result.sale.authorizationReference}.`;
+        notice.textContent = `Sale #${result.sale.id} completed for ${formatMoney(cents(result.sale.total))}. ${paymentReceipt} Inventory has been updated.`;
+        document.getElementById("sale-reference").textContent = `Sale #${result.sale.id} completed`;
+        document.getElementById("payment-error").textContent = "";
+        document.getElementById("checkout-dialog").close();
+        resetPaymentForm();
+        const saleEvent = { type: "sale-completed", saleId: result.sale.id };
+        try {
+          if ("BroadcastChannel" in window) {
+            const channel = new BroadcastChannel("smartstock-sales");
+            channel.postMessage(saleEvent);
+            channel.close();
+          }
+        } catch (notificationError) {
+          console.warn("The Admin Dashboard will refresh sales data on its next poll.", notificationError);
+        }
+        try {
+          localStorage.setItem("smartstock-sale-completed", JSON.stringify({
+            ...saleEvent,
+            completedAt: Date.now()
+          }));
+        } catch (storageError) {
+          console.warn("The Admin Dashboard will refresh sales data on its next poll.", storageError);
+        }
+        setStatus("Ready for the next customer.");
+        await loadProducts(false);
+        showReceipt(result.sale, purchasedItems);
+      } catch (error) {
+        document.getElementById("payment-error").textContent = error.message;
+        setStatus(error.message, true);
+        await loadProducts(false);
+      } finally {
+        checkoutInProgress = false;
+        renderCart();
+      }
+    }
+
+    document.getElementById("product-search").addEventListener("input", renderProducts);
+    discountTypeSelect.addEventListener("change", () => {
+      discountButton.disabled = checkoutInProgress || cart.size === 0 || !discountTypeSelect.value;
+    });
+    discountButton.addEventListener("click", () => {
+      if (discountType) {
+        discountType = "";
+        discountTypeSelect.value = "";
+        setStatus("Discount removed.");
+      } else if (discountTypeSelect.value) {
+        discountType = discountTypeSelect.value;
+        setStatus(`${discountType === "pwd" ? "PWD" : "Senior Citizen"} 20% discount applied. VAT is exempt.`);
+      } else {
+        return;
+      }
+      renderCart();
+    });
+    document.getElementById("refresh-button").addEventListener("click", refreshInterface);
+    document.getElementById("checkout-button").addEventListener("click", openCheckoutDialog);
+    document.getElementById("complete-sale-button").addEventListener("click", completeSale);
+    document.getElementById("print-receipt").addEventListener("click", printReceipt);
+    document.getElementById("close-receipt").addEventListener("click", () => document.getElementById("receipt-dialog").close());
+    document.getElementById("close-receipt-done").addEventListener("click", () => document.getElementById("receipt-dialog").close());
+    document.getElementById("close-checkout-dialog").addEventListener("click", closeCheckoutDialog);
+    document.getElementById("cancel-payment").addEventListener("click", closeCheckoutDialog);
+    document.querySelectorAll('input[name="payment-method"]').forEach(input => {
+      input.addEventListener("change", updatePaymentForm);
+    });
+    ["cash-tendered", "card-type", "card-last-four", "card-reference"].forEach(id => {
+      document.getElementById(id).addEventListener("input", updatePaymentForm);
+      document.getElementById(id).addEventListener("change", updatePaymentForm);
+    });
+    document.getElementById("checkout-dialog").addEventListener("cancel", event => {
+      if (checkoutInProgress) event.preventDefault();
+    });
+    document.getElementById("logout-button").addEventListener("click", async event => {
+      const button = event.currentTarget;
+      button.disabled = true;
+      try {
+        await requestJson("../api/logout.php", { method: "POST", body: "{}" });
+        window.location.href = "../adminpage/employee-login.html";
+      } catch (error) {
+        setStatus(error.message, true);
+        button.disabled = false;
+      }
+    });
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) loadProducts(false);
+    });
+    window.setInterval(() => {
+      if (!document.hidden) loadProducts(false);
+    }, 45000);
+    loadProducts();
+  </script>
+</body>
+</html>

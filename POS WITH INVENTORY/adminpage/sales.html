@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#eef3f9">
+  <title>Sales History | SmartStock POS</title>
+  <style>
+    :root { color-scheme: light; font-family: Inter,"Segoe UI",Arial,sans-serif; color: #203149; background: #eef3f9; --line:#dce5ef; --muted:#607187; }
+    button,input,select { font:inherit; }
+    button:focus-visible,input:focus-visible,select:focus-visible { outline:3px solid rgba(40,127,193,.24); outline-offset:2px; }
+    .card-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:17px; }
+    .card-heading h2 { margin:0; color:#202637; font-size:20px; }
+    .card-heading p { margin:5px 0 0; color:var(--muted); font-size:13px; }
+    .refresh-button,.filter-actions button,.receipt-reference { min-height:38px; padding:8px 12px; border:1px solid #d6dce8; border-radius:8px; background:#fff; color:#3f5c92; font-size:12px; font-weight:700; cursor:pointer; }
+    .filter-form { display:grid; grid-template-columns:minmax(170px,1.2fr) minmax(150px,1fr) minmax(160px,1fr) minmax(145px,.8fr) auto; align-items:end; gap:10px; margin-bottom:15px; }
+    .filter-form label { display:grid; gap:6px; color:var(--muted); font-size:12px; }
+    .filter-form input,.filter-form select { width:100%; min-width:0; min-height:39px; padding:8px 10px; border:1px solid var(--line); border-radius:8px; color:#252a34; background:#fff; font:inherit; font-size:13px; }
+    .date-fields { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .date-fields[hidden] { display:none; }
+    .filter-actions { display:flex; gap:7px; }
+    .filter-actions button[type=submit] { border-color:#287fc1; background:#287fc1; color:#fff; }
+    .history-status { min-height:22px; display:flex; align-items:center; gap:8px; margin:0 0 10px; color:var(--muted); font-size:12px; }
+    .history-status.error { color:#b42318; }
+    .table-scroll { overflow-x:auto; }
+    .history-scroll { height:auto; max-height:70vh; overflow:auto; }
+    table { width:100%; border-collapse:collapse; text-align:left; font-size:13px; }
+    thead { background:#eef1f8; }
+    th { padding:10px 12px; color:#374052; font-weight:600; white-space:nowrap; }
+    th:first-child { border-radius:8px 0 0 8px; } th:last-child { border-radius:0 8px 8px 0; }
+    td { padding:10px 12px; border-bottom:1px solid #e5e6ea; color:#252a34; white-space:nowrap; }
+    tbody tr:last-child td { border-bottom:0; }
+    .history-table { min-width:1120px; }
+    .product-name { color:#263652; font-weight:700; }
+    .staff { display:inline-flex; align-items:center; gap:8px; }
+    .staff img,.staff-fallback { width:30px; height:30px; flex:0 0 30px; border-radius:50%; object-fit:cover; }
+    .staff-fallback { display:grid; place-items:center; background:#e8edf6; color:#435c86; font-size:11px; font-weight:750; }
+    .receipt-reference { min-height:auto; padding:5px 8px; }
+    .empty-row { padding:20px 14px; text-align:center; color:var(--muted); }
+    .history-status.is-loading::before { width:13px; height:13px; flex:0 0 13px; border:2px solid #ccd8e7; border-top-color:#287fc1; border-radius:50%; animation:history-spin .7s linear infinite; content:""; }
+    .skeleton-row td { padding:18px 12px; }
+    .skeleton-lines { display:grid; gap:12px; }
+    .skeleton-lines span { display:block; width:100%; height:11px; border-radius:999px; background:linear-gradient(90deg,#edf1f6 25%,#f8fafc 45%,#edf1f6 65%); background-size:220% 100%; animation:skeleton-shimmer 1.3s ease-in-out infinite; }
+    .skeleton-lines span:nth-child(2n) { width:84%; }
+    .skeleton-lines span:nth-child(3n) { width:69%; }
+    .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+    @keyframes history-spin { to { transform:rotate(360deg); } }
+    @keyframes skeleton-shimmer { to { background-position:-220% 0; } }
+    .receipt-dialog { width:min(620px,calc(100% - 28px)); max-height:88vh; padding:22px; overflow:auto; border:1px solid #dfe5ed; border-radius:15px; background:#fff; color:#252a34; box-shadow:0 20px 70px rgba(28,40,63,.25); }
+    .receipt-dialog::backdrop { background:rgba(27,37,57,.42); backdrop-filter:blur(2px); }
+    .receipt-heading { display:flex; justify-content:space-between; gap:12px; margin-bottom:14px; }
+    .receipt-heading h2 { margin:0; color:#202637; font-size:20px; }
+    .receipt-heading p { margin:5px 0 0; color:var(--muted); font-size:12px; }
+    .receipt-close { border:0; background:transparent; color:#596579; font-size:23px; cursor:pointer; }
+    .receipt-meta { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:0 0 14px; padding:13px; border-radius:10px; background:#f5f7fb; }
+    .receipt-meta div { display:grid; gap:3px; } .receipt-meta dt { color:var(--muted); font-size:11px; }
+    .receipt-meta dd { margin:0; color:#303c52; font-size:13px; font-weight:650; overflow-wrap:anywhere; }
+    .receipt-totals { display:grid; gap:7px; margin-top:12px; }
+    .receipt-totals div { display:flex; justify-content:space-between; gap:12px; font-size:13px; }
+    .receipt-totals .grand { padding-top:9px; border-top:1px solid var(--line); color:#243b60; font-size:16px; font-weight:750; }
+    @media(max-width:1000px) { .filter-form { grid-template-columns:1fr 1fr; } .date-fields,.filter-actions { grid-column:1/-1; } }
+    @media(max-width:620px) {
+      .card-heading { align-items:flex-start; }
+    }
+    @media(max-width:480px) { .filter-form { grid-template-columns:1fr; } .date-fields,.filter-actions { grid-column:auto; } .receipt-meta { grid-template-columns:1fr; } }
+    @media(prefers-reduced-motion:reduce) { *,*::before,*::after { scroll-behavior:auto!important; transition-duration:.01ms!important; animation-duration:.01ms!important; animation-iteration-count:1!important; } }
+  </style>
+  <link rel="stylesheet" href="admin-theme.css?v=20261004-admin-v8">
+  <link rel="stylesheet" href="../page-transitions.css">
+</head>
+<body class="auth-pending">
+  <div class="app">
+    <aside class="sidebar" id="sidebar" aria-label="Main navigation">
+      <a class="brand" href="admindashboard.html" aria-label="SmartStock POS dashboard"><img src="../images/image.png" alt="SmartStock POS"></a>
+      <nav class="nav">
+        <a class="nav-link" href="admindashboard.html#dashboard-view"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="2.5" y="2.5" width="8" height="8" rx="2" fill="currentColor" opacity=".8"/><rect x="13.5" y="2.5" width="8" height="8" rx="2" fill="currentColor" opacity=".55"/><rect x="2.5" y="13.5" width="8" height="8" rx="2" fill="currentColor" opacity=".55"/><rect x="13.5" y="13.5" width="8" height="8" rx="2" fill="currentColor" opacity=".8"/></svg><span>Dashboard</span></a>
+        <a class="nav-link" href="admindashboard.html#user-management"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="7" r="4" fill="currentColor" opacity=".48" stroke="currentColor" stroke-width="1.4"/><path d="M3 21c.6-4.4 3.7-7 9-7s8.4 2.6 9 7" fill="currentColor" opacity=".35" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>User Management</span></a>
+        <a class="nav-link" href="admindashboard.html#people"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="9" cy="8" r="4" fill="currentColor" opacity=".4" stroke="currentColor" stroke-width="1.4"/><circle cx="18" cy="9" r="3" fill="currentColor" opacity=".25" stroke="currentColor" stroke-width="1.3"/><path d="M1.5 21c.4-4.1 3-6.5 7.5-6.5s7.2 2.4 7.5 6.5M15 15c4.4-.8 7.1 1.3 7.5 5" fill="currentColor" opacity=".25" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><span>People</span></a>
+        <a class="nav-link" href="products.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m2 7 10-5 10 5-10 5L2 7Z" fill="currentColor" opacity=".35" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M2 7v10l10 5V12M22 7v10l-10 5" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg><span>Products</span></a>
+        <a class="nav-link active" href="sales.html" aria-current="page"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 4h16v16H4z" fill="currentColor" opacity=".18" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 8h8M8 12h8M8 16h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M7 2v4m10-4v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>Sales</span></a>
+        <a class="nav-link" href="admindashboard.html#transfer"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 8h15l-3-3m4 11H5l3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 8a7 7 0 0 0-12-4M5 16a7 7 0 0 0 12 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>Transfer</span></a>
+        <a class="nav-link" href="purchases.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M2 3h2l2.5 13h12L21 7H5" fill="currentColor" opacity=".22" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="9" cy="20" r="1.7" fill="currentColor"/><circle cx="18" cy="20" r="1.7" fill="currentColor"/></svg><span>Purchases</span></a>
+        <a class="nav-link" href="admindashboard.html#sales-return"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h13a4 4 0 0 1 0 8H7m0 0 4-4m-4 4 4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 4h17v16H3z" fill="currentColor" opacity=".12" stroke="currentColor" stroke-width="1.2"/></svg><span>Sales return</span></a>
+        <a class="nav-link" href="admindashboard.html#accounts"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="2" y="3" width="14" height="11" rx="2" fill="currentColor" opacity=".3" stroke="currentColor" stroke-width="1.4"/><path d="M5 7h8M5 10h5m-6 6h11v5H4zM18 8h4v13h-4z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg><span>Accounts</span><span class="nav-arrow">›</span></a>
+        <a class="nav-link" href="admindashboard.html#reports"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="2" width="14" height="20" rx="2" fill="currentColor" opacity=".22" stroke="currentColor" stroke-width="1.4"/><path d="M7 7h6m-6 4h6m-6 4h3m8-7h4v12h-4zM8 19v-2m3 2v-5m3 5v-8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><span>Reports</span><span class="nav-arrow">›</span></a>
+      </nav>
+      <div class="sidebar-profile">
+        <div class="sidebar-profile-user"><img class="profile-avatar" id="sidebar-avatar" alt=""><span class="sidebar-user-copy"><span class="signed-in-user" id="sidebar-user-name"></span><span class="sidebar-user-role" id="sidebar-user-role" hidden></span></span></div>
+        <a class="sidebar-switch-view" id="owner-switch-view" href="../employeepage/employeedashboard.html" hidden>Switch to Employee POS</a>
+        <button class="sidebar-logout" id="logout-button" type="button">Log Out</button>
+        <p class="logout-feedback" id="logout-feedback" role="status" aria-live="polite"></p>
+      </div>
+    </aside>
+    <main>
+      <header class="topbar">
+        <button class="menu-toggle" id="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false">☰</button>
+        <div class="page-heading">
+          <h1>SALES HISTORY</h1>
+          <p>Review itemized sales activity and transaction receipts.</p>
+          <time class="today" id="today"></time>
+        </div>
+      </header>
+      <section class="card card-wrapper" aria-labelledby="sales-history-title">
+        <div class="card-heading"><div><h2 id="sales-history-title">Sales History / Item Sales</h2><p>Review item-level sales and open any transaction to view its full receipt.</p></div><button class="refresh-button" id="refresh-sales" type="button">Refresh</button></div>
+        <form class="filter-form" id="sales-history-filters">
+          <label for="sales-product-filter">Product or SKU<input id="sales-product-filter" type="search" maxlength="150" placeholder="Search item name or SKU"></label>
+          <label for="sales-cashier-filter">Employee / Cashier<input id="sales-cashier-filter" type="search" maxlength="100" placeholder="Search employee name"></label>
+          <label for="sales-date-preset">Date range<select id="sales-date-preset"><option value="today">Today</option><option value="week">This week</option><option value="custom">Custom date range</option><option value="all">All time</option></select></label>
+          <div class="date-fields" id="sales-date-fields" hidden><label for="sales-date-from">From<input id="sales-date-from" type="date"></label><label for="sales-date-to">To<input id="sales-date-to" type="date"></label></div>
+          <label for="sales-payment-filter">Payment method<select id="sales-payment-filter"><option value="">All methods</option><option value="cash">Cash</option><option value="card">Card</option></select></label>
+          <div class="filter-actions"><button type="submit">Apply filters</button><button id="reset-sales-filters" type="button">Reset</button></div>
+        </form>
+        <p class="history-status" id="sales-history-status" role="status" aria-live="polite"></p>
+        <div class="table-scroll history-scroll" id="sales-history-container" aria-busy="true"><table class="history-table">
+          <thead><tr><th scope="col">Product</th><th scope="col">SKU</th><th scope="col">Category</th><th scope="col">Unit Price</th><th scope="col">Qty Sold</th><th scope="col">Total Amount</th><th scope="col">Payment</th><th scope="col">Employee / Cashier</th><th scope="col">Date &amp; Time</th><th scope="col">Transaction</th></tr></thead>
+          <tbody id="sales-history-rows"><tr class="skeleton-row" aria-hidden="true"><td colspan="10"><div class="skeleton-lines"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div><span class="sr-only">Loading sales history…</span></td></tr></tbody>
+        </table></div>
+      </section>
+    </main>
+  </div>
+  <dialog class="receipt-dialog" id="receipt-dialog" aria-labelledby="receipt-title">
+    <div class="receipt-heading"><div><h2 id="receipt-title">Sale receipt</h2><p id="receipt-timestamp"></p></div><button class="receipt-close" id="close-receipt" type="button" aria-label="Close receipt">×</button></div>
+    <dl class="receipt-meta" id="receipt-meta"></dl>
+    <div class="table-scroll"><table><thead><tr><th scope="col">Item</th><th scope="col">SKU</th><th scope="col">Qty</th><th scope="col">Unit price</th><th scope="col">Total</th></tr></thead><tbody id="receipt-items"></tbody></table></div>
+    <div class="receipt-totals" id="receipt-totals"></div>
+  </dialog>
+  <script src="admin-profile.js"></script>
+  <script src="admin-global.js?v=20261009-admin-nav-v1"></script>
+  <script>
+    const currency = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" });
+    const rows = document.getElementById("sales-history-rows");
+    const status = document.getElementById("sales-history-status");
+    const historyContainer = document.getElementById("sales-history-container");
+    let csrfToken = "";
+    let isLoading = false;
+    let refreshQueued = false;
+    let queuedRefreshIsSilent = true;
+    let currentUserId = "";
+    let lastRenderedQuery = null;
+
+    function localDateValue(date) {
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    }
+    async function requestJson(url, options = {}) {
+      const headers = new Headers(options.headers || {});
+      headers.set("Accept", "application/json");
+      if (options.body) { headers.set("Content-Type", "application/json"); headers.set("X-CSRF-Token", csrfToken); }
+      const response = await fetch(url, { ...options, headers, credentials: "same-origin" });
+      const result = await response.json();
+      if (!response.ok) {
+        if (response.status === 401) window.location.href = "Login.html?error=session";
+        throw new Error(result.error || "The request could not be completed.");
+      }
+      return result;
+    }
+    function setStatus(message, isError = false, isLoadingStatus = false) {
+      status.textContent = message;
+      status.classList.toggle("error", isError);
+      status.classList.toggle("is-loading", isLoadingStatus);
+    }
+    function emptyRow(message, columnCount = 10) {
+      const row = document.createElement("tr"), cell = document.createElement("td");
+      cell.colSpan = columnCount; cell.className = "empty-row"; cell.textContent = message; row.append(cell); return row;
+    }
+    function renderSkeleton() {
+      const row = document.createElement("tr"), cell = document.createElement("td"), lines = document.createElement("div");
+      row.className = "skeleton-row";
+      row.setAttribute("aria-hidden", "true");
+      cell.colSpan = 10;
+      lines.className = "skeleton-lines";
+      for (let index = 0; index < 8; index += 1) lines.append(document.createElement("span"));
+      cell.append(lines);
+      row.append(cell);
+      rows.replaceChildren(row);
+    }
+    function formatTimestamp(value) {
+      const date = new Date(String(value).replace(" ", "T"));
+      return Number.isNaN(date.getTime()) ? String(value) : new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "medium" }).format(date);
+    }
+    function selectedDateRange() {
+      const preset = document.getElementById("sales-date-preset").value;
+      if (preset === "all") return { from: "", to: "" };
+      if (preset === "custom") return { from: document.getElementById("sales-date-from").value, to: document.getElementById("sales-date-to").value };
+      const today = new Date(), end = localDateValue(today), start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      if (preset === "week") start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+      return { from: localDateValue(start), to: end };
+    }
+    function salesHistoryQuery() {
+      const params = new URLSearchParams();
+      const product = document.getElementById("sales-product-filter").value.trim();
+      const cashier = document.getElementById("sales-cashier-filter").value.trim();
+      const payment = document.getElementById("sales-payment-filter").value;
+      const { from, to } = selectedDateRange();
+      if (product) params.set("product", product);
+      if (cashier) params.set("cashier", cashier);
+      if (payment) params.set("paymentMethod", payment);
+      if (from || to) {
+        if (!from || !to) throw new Error("Choose both a start and end date.");
+        if (to < from) throw new Error("The end date cannot be earlier than the start date.");
+        params.set("from", from);
+        params.set("to", to);
+      }
+      return params.toString();
+    }
+    function restoreCachedHistory(query) {
+      try {
+        const cached = JSON.parse(sessionStorage.getItem(`smartstock-sales-history:${currentUserId}`) || "null");
+        if (!cached || cached.query !== query || !Array.isArray(cached.records) || typeof cached.truncated !== "boolean") return false;
+        renderSalesHistory(cached.records, cached.truncated, query);
+        setStatus("Showing saved sales while checking for updates.", false, true);
+        return true;
+      } catch (error) {
+        console.warn("Sales history cache could not be read.", error);
+        return false;
+      }
+    }
+    function cacheSalesHistory(query, records, truncated) {
+      try {
+        sessionStorage.setItem(`smartstock-sales-history:${currentUserId}`, JSON.stringify({
+          query,
+          records,
+          truncated
+        }));
+      } catch (error) {
+        console.warn("Sales history cache could not be saved.", error);
+      }
+    }
+    async function loadSalesHistory({ silent = false } = {}) {
+      if (isLoading) {
+        refreshQueued = true;
+        queuedRefreshIsSilent = queuedRefreshIsSilent && silent;
+        return;
+      }
+      let query;
+      try {
+        query = salesHistoryQuery();
+      } catch (error) {
+        setStatus(error.message || "Sales history filters are invalid.", true);
+        return;
+      }
+      isLoading = true;
+      const hasCurrentResults = lastRenderedQuery === query;
+      if (!hasCurrentResults) renderSkeleton();
+      historyContainer.setAttribute("aria-busy", "true");
+      if (!silent || !hasCurrentResults) setStatus("Loading sales history…", false, true);
+      try {
+        const result = await requestJson(`../api/sales-history.php${query ? `?${query}` : ""}`);
+        renderSalesHistory(result.records, result.truncated, query);
+        cacheSalesHistory(query, result.records, result.truncated);
+      } catch (error) {
+        if (!hasCurrentResults) rows.replaceChildren(emptyRow(error.message || "Sales history could not be loaded."));
+        setStatus(error.message || "Sales history could not be loaded.", true);
+      } finally {
+        isLoading = false;
+        historyContainer.setAttribute("aria-busy", "false");
+        if (refreshQueued) {
+          const nextRefreshIsSilent = queuedRefreshIsSilent;
+          refreshQueued = false;
+          queuedRefreshIsSilent = true;
+          void loadSalesHistory({ silent: nextRefreshIsSilent });
+        }
+      }
+    }
+    function renderSalesHistory(records, truncated, query) {
+      rows.replaceChildren();
+      lastRenderedQuery = query;
+      if (!records.length) {
+        rows.append(emptyRow("No item sales match these filters."));
+        setStatus("No matching sales found.");
+        return;
+      }
+      for (const record of records) {
+        const row = document.createElement("tr"), product = document.createElement("td"), productName = document.createElement("span");
+        productName.className = "product-name"; productName.textContent = record.product_name; product.append(productName);
+        row.append(product);
+        for (const value of [record.sku, record.category || "Uncategorized", currency.format(Number(record.unit_price)), Number(record.quantity).toLocaleString(), currency.format(Number(record.line_total))]) {
+          const cell = document.createElement("td"); cell.textContent = value; row.append(cell);
+        }
+        const payment = document.createElement("td"); payment.textContent = record.payment_method === "card" ? "Card" : "Cash";
+        if (record.payment_method === "card" && record.card_last_four) payment.title = `${record.card_type || "Card"} ending ${record.card_last_four}; approval ${record.authorization_reference || "not recorded"}`;
+        else if (record.payment_method === "cash" && record.cash_received !== null) payment.title = `Received ${currency.format(Number(record.cash_received))}; change ${currency.format(Number(record.change_given || 0))}`;
+        row.append(payment);
+        const staffCell = document.createElement("td"), staff = document.createElement("span"), name = String(record.cashier_name || "Unknown employee"), fallback = document.createElement("span");
+        staff.className = "staff"; fallback.className = "staff-fallback"; fallback.textContent = name.trim().charAt(0).toLocaleUpperCase() || "?";
+        if (record.avatar_url) {
+          const avatar = document.createElement("img"); avatar.src = record.avatar_url; avatar.alt = ""; avatar.loading = "lazy";
+          avatar.addEventListener("error", () => avatar.replaceWith(fallback), { once: true }); staff.append(avatar);
+        } else staff.append(fallback);
+        const cashierName = document.createElement("span"); cashierName.textContent = name; staff.append(cashierName); staffCell.append(staff); row.append(staffCell);
+        const timestamp = document.createElement("td"); timestamp.textContent = formatTimestamp(record.created_at); row.append(timestamp);
+        const referenceCell = document.createElement("td"), reference = document.createElement("button");
+        reference.className = "receipt-reference"; reference.type = "button"; reference.textContent = `#${record.sale_id}`;
+        reference.setAttribute("aria-label", `Open receipt for sale ${record.sale_id}`);
+        reference.addEventListener("click", () => void openReceipt(record.sale_id)); referenceCell.append(reference); row.append(referenceCell);
+        rows.append(row);
+      }
+      setStatus(`${records.length.toLocaleString()} item sale${records.length === 1 ? "" : "s"} shown${truncated ? "; showing the latest 500 matches. Add filters to narrow the results." : "."}`);
+    }
+    function addReceiptMeta(label, value) {
+      const wrapper = document.createElement("div"), term = document.createElement("dt"), description = document.createElement("dd");
+      term.textContent = label; description.textContent = value; wrapper.append(term, description); document.getElementById("receipt-meta").append(wrapper);
+    }
+    async function openReceipt(saleId) {
+      const dialog = document.getElementById("receipt-dialog"), items = document.getElementById("receipt-items"), totals = document.getElementById("receipt-totals");
+      document.getElementById("receipt-title").textContent = `Sale #${saleId}`;
+      document.getElementById("receipt-timestamp").textContent = "Loading receipt…";
+      document.getElementById("receipt-meta").replaceChildren(); items.replaceChildren(emptyRow("Loading receipt…", 5)); totals.replaceChildren(); dialog.showModal();
+      try {
+        const { sale } = await requestJson(`../api/sales-history.php?saleId=${encodeURIComponent(saleId)}`);
+        document.getElementById("receipt-title").textContent = `Sale #${sale.id}`;
+        document.getElementById("receipt-timestamp").textContent = formatTimestamp(sale.createdAt);
+        document.getElementById("receipt-meta").replaceChildren(); addReceiptMeta("Employee / Cashier", sale.cashierName);
+        addReceiptMeta("Payment method", sale.paymentMethod === "card" ? `${sale.cardType || "Card"} ending ${sale.cardLastFour || "----"}` : "Cash");
+        if (sale.paymentMethod === "card") addReceiptMeta("Approval reference", sale.authorizationReference || "Not recorded");
+        else { addReceiptMeta("Cash received", sale.cashReceived === null ? "—" : currency.format(Number(sale.cashReceived))); addReceiptMeta("Change given", sale.changeGiven === null ? "—" : currency.format(Number(sale.changeGiven))); }
+        items.replaceChildren();
+        for (const item of sale.items) {
+          const row = document.createElement("tr");
+          for (const value of [item.product_name, item.sku, Number(item.quantity).toLocaleString(), currency.format(Number(item.unit_price)), currency.format(Number(item.line_total))]) {
+            const cell = document.createElement("td"); cell.textContent = value; row.append(cell);
+          }
+          items.append(row);
+        }
+        totals.replaceChildren();
+        const taxLabel = Number(sale.taxRate) === 0 ? "VAT exempt" : `Tax (${Number(sale.taxRate)}%)`;
+        const totalRows = [["Subtotal", sale.subtotal]];
+        const discountLabel = sale.discountType
+          ? `${sale.discountType === "pwd" ? "PWD" : "Senior Citizen"} discount (${Number(sale.discountPercent)}%)`
+          : "Discount";
+        const discountAmount = Number(sale.discountAmount || 0);
+        totalRows.push([discountLabel, discountAmount > 0 ? -discountAmount : 0]);
+        totalRows.push([taxLabel, sale.taxAmount], ["Total", sale.total]);
+        for (const [label, amount] of totalRows) {
+          const line = document.createElement("div"), title = document.createElement("span"), value = document.createElement("strong");
+          if (label === "Total") line.className = "grand";
+          title.textContent = label; value.textContent = currency.format(Number(amount)); line.append(title, value); totals.append(line);
+        }
+      } catch (error) { items.replaceChildren(emptyRow(error.message || "Receipt could not be loaded.", 5)); document.getElementById("receipt-timestamp").textContent = "Receipt could not be loaded."; }
+    }
+    async function initialize() {
+      setStatus("Checking Admin session…", false, true);
+      try {
+        const result = await requestJson("../api/session.php"); csrfToken = result.csrfToken; window.renderAdminProfile(result.user);
+        currentUserId = String(result.user.id);
+        document.getElementById("today").textContent = new Intl.DateTimeFormat("en", { month:"long", day:"numeric", year:"numeric" }).format(new Date());
+        const hasCachedHistory = restoreCachedHistory(salesHistoryQuery());
+        document.body.classList.remove("auth-pending");
+        void loadSalesHistory({ silent: hasCachedHistory });
+        if ("BroadcastChannel" in window) {
+          const channel = new BroadcastChannel("smartstock-sales");
+          channel.addEventListener("message", event => { if (event.data?.type === "sale-completed") void loadSalesHistory({ silent: true }); });
+        }
+        window.addEventListener("storage", event => { if (event.key === "smartstock-sale-completed" && event.newValue) void loadSalesHistory({ silent: true }); });
+        document.addEventListener("visibilitychange", () => { if (!document.hidden) void loadSalesHistory({ silent: true }); });
+        window.setInterval(() => { if (!document.hidden) void loadSalesHistory({ silent: true }); }, 5000);
+      } catch (error) { window.location.href = "Login.html?error=session"; }
+    }
+    const sidebar = document.getElementById("sidebar"), menuToggle = document.getElementById("menu-toggle");
+    menuToggle.addEventListener("click", () => {
+      const open = sidebar.classList.toggle("open"); menuToggle.setAttribute("aria-expanded", String(open)); menuToggle.setAttribute("aria-label", open ? "Close navigation" : "Open navigation");
+    });
+    sidebar.addEventListener("click", event => {
+      if (event.target.closest(".nav-link") && window.matchMedia("(max-width: 620px)").matches) {
+        sidebar.classList.remove("open"); menuToggle.setAttribute("aria-expanded", "false"); menuToggle.setAttribute("aria-label", "Open navigation");
+      }
+    });
+    document.getElementById("sales-date-preset").addEventListener("change", event => { document.getElementById("sales-date-fields").hidden = event.currentTarget.value !== "custom"; });
+    document.getElementById("sales-history-filters").addEventListener("submit", event => { event.preventDefault(); void loadSalesHistory(); });
+    document.getElementById("reset-sales-filters").addEventListener("click", () => {
+      document.getElementById("sales-history-filters").reset(); document.getElementById("sales-date-fields").hidden = true; void loadSalesHistory();
+    });
+    document.getElementById("refresh-sales").addEventListener("click", () => void loadSalesHistory());
+    document.getElementById("close-receipt").addEventListener("click", () => document.getElementById("receipt-dialog").close());
+    document.getElementById("logout-button").addEventListener("click", async event => {
+      const button = event.currentTarget; button.disabled = true;
+      try {
+        await requestJson("../api/logout.php", { method:"POST", body:"{}" });
+        try { sessionStorage.removeItem(`smartstock-sales-history:${currentUserId}`); }
+        catch (error) { console.warn("Sales history cache could not be cleared.", error); }
+        window.location.href = "Login.html";
+      }
+      catch (error) { document.getElementById("logout-feedback").textContent = error.message; button.disabled = false; }
+    });
+    initialize();
+  </script>
+</body>
+</html>

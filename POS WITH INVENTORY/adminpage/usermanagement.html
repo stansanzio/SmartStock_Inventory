@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>User Management | SmartStock POS</title>
+    <style>
+      :root {
+        --bg: #edf1fb;
+        --panel: #f8f8fb;
+        --panel-strong: #f3f4f9;
+        --sidebar: #edf2f8;
+        --sidebar-border: #dfe6f1;
+        --line: #dfe4ef;
+        --line-strong: #d5dceb;
+        --text: #2a2f3a;
+        --muted: #6c7585;
+        --soft: #b5bed0;
+        --blue: #4c78c7;
+        --blue-2: #dfeaff;
+        --blue-dark: #2f4f8a;
+        --green: #59c17d;
+        --green-soft: #dff7ea;
+        --red: #ef5d5d;
+        --red-soft: #ffe6e8;
+        --orange: #f2b261;
+        --shadow: 0 10px 24px rgba(17, 24, 39, 0.06);
+      }
+
+      .section-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 16px;
+      }
+
+      .section-title {
+        font-size: clamp(2.1rem, 2.4vw, 2.8rem);
+        letter-spacing: -0.06em;
+        margin: 0;
+        font-weight: 800;
+        color: #24314a;
+      }
+
+      .updated {
+        font-size: 0.9rem;
+        color: #6d7a8d;
+      }
+
+      .stats {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 12px 0 18px;
+        flex-wrap: wrap;
+      }
+
+      .stat-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 8px 12px;
+        border-radius: 10px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+
+      .stat-pill strong {
+        font-size: 1.05rem;
+        margin-left: 8px;
+      }
+
+      .stat-total {
+        background: rgba(82, 116, 183, 0.12);
+        color: #516ea8;
+      }
+
+      .stat-active {
+        background: rgba(89, 193, 125, 0.12);
+        color: #2d9d5e;
+      }
+
+      .stat-inactive {
+        background: rgba(239, 93, 93, 0.12);
+        color: #d75e5e;
+      }
+
+      .toolbar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 12px 0 22px;
+        flex-wrap: wrap;
+      }
+
+      .mini-search {
+        flex: 1;
+        min-width: 220px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: rgba(240,243,249,0.8);
+        border: 1px solid rgba(146, 161, 196, 0.22);
+        border-radius: 12px;
+        padding: 10px 12px;
+        color: #7b8797;
+      }
+
+      .mini-search input {
+        border: none;
+        background: transparent;
+        width: 100%;
+        outline: none;
+        color: var(--text);
+        font-size: 1rem;
+      }
+
+      .tag-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 12px;
+        min-height: 36px;
+        border-radius: 9px;
+        border: 1px solid rgba(117, 132, 170, 0.18);
+        background: rgba(255,255,255,0.3);
+        color: #4d5c76;
+        font-size: 0.82rem;
+        font-weight: 600;
+      }
+
+      .tag.active {
+        background: rgba(83, 121, 197, 0.08);
+        border-color: rgba(83, 121, 197, 0.2);
+        color: #2a4d8d;
+      }
+
+      .list-title {
+        margin: 18px 0 10px;
+        font-size: clamp(1.8rem, 2vw, 2.25rem);
+        letter-spacing: -0.05em;
+        font-weight: 800;
+        color: #24314a;
+      }
+
+      .table-card {
+        background: rgba(255,255,255,0.22);
+        border: 1px solid rgba(137, 151, 180, 0.18);
+        border-radius: 16px;
+        overflow: hidden;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      thead th {
+        text-align: left;
+        background: rgba(232, 237, 246, 0.9);
+        color: #4b5970;
+        font-size: 0.82rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        font-weight: 700;
+        padding: 14px 18px;
+      }
+
+      tbody td {
+        padding: 16px 18px;
+        border-top: 1px solid rgba(196, 205, 223, 0.7);
+        font-size: 1rem;
+        color: #2d3340;
+      }
+
+      tbody tr:nth-child(even) {
+        background: rgba(249, 250, 252, 0.4);
+      }
+
+      .user-cell {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .avatar {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #d7e1f5, #c3d3ee);
+        display: grid;
+        place-items: center;
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #4b5d7d;
+        border: 1px solid rgba(104, 120, 161, 0.2);
+      }
+
+      .avatar.photo {
+        background: linear-gradient(135deg, #d9d9d9, #b8b8b8);
+      }
+
+      .name {
+        font-weight: 700;
+        color: #2b3340;
+      }
+
+      .email {
+        color: #69768a;
+        font-size: 0.82rem;
+      }
+
+      .role {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 78px;
+        padding: 7px 10px;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-weight: 700;
+      }
+
+      .role.admin {
+        background: rgba(83, 121, 197, 0.12);
+        color: #4567b7;
+      }
+
+      .role.editor {
+        background: rgba(89, 193, 125, 0.13);
+        color: #2c9d5e;
+      }
+
+      .role.viewer {
+        background: rgba(239, 93, 93, 0.1);
+        color: #d85757;
+      }
+
+      .online {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        color: #2d8f5d;
+      }
+
+      .online::before {
+        content: "";
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: #4cc069;
+        box-shadow: 0 0 0 3px rgba(76, 192, 105, 0.18);
+      }
+
+      .inactive {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        color: #d65d5d;
+      }
+
+      .inactive::before {
+        content: "";
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: #d65d5d;
+        box-shadow: 0 0 0 3px rgba(214, 93, 93, 0.15);
+      }
+
+      .actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .action-link {
+        font-size: 0.84rem;
+        font-weight: 600;
+        color: #4f75c8;
+        text-decoration: none;
+        border: 1px solid rgba(128, 149, 196, 0.2);
+        background: rgba(255,255,255,0.2);
+        padding: 6px 10px;
+        border-radius: 8px;
+      }
+
+      .action-link.danger {
+        color: #d75b5b;
+      }
+
+      .add-btn {
+        background: linear-gradient(180deg, #5d84d8, #4d73c6);
+        border: none;
+        color: white;
+        border-radius: 11px;
+        padding: 11px 18px;
+        font-size: 0.96rem;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 8px 18px rgba(83, 118, 196, 0.22);
+      }
+
+      .btn-row {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 14px;
+        margin-bottom: 4px;
+      }
+
+      @media (max-width: 1024px) {
+        .heading {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .searchbox {
+          width: 100%;
+        }
+      }
+
+      @media (max-width: 720px) {
+        .section-head {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .toolbar {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .mini-search {
+          width: 100%;
+        }
+      }
+    </style>
+    <link rel="stylesheet" href="admin-theme.css?v=20261004-admin-v8">
+    <link rel="stylesheet" href="../page-transitions.css">
+  </head>
+  <body class="user-management-page">
+    <div class="dashboard">
+      <aside class="sidebar" id="sidebar">
+        <a class="brand" href="admindashboard.html" aria-label="SmartStock POS dashboard">
+          <img src="../images/image.png" alt="SmartStock POS">
+        </a>
+
+        <nav class="nav" aria-label="Sidebar">
+          <a class="nav-item" href="#">
+            <span class="nav-icon">🏠</span>
+            <span>Dashboard</span>
+          </a>
+
+          <a class="nav-item active" href="usermanagement.html">
+            <span class="nav-icon">👤</span>
+            <span>User Management</span>
+            <span class="nav-arrow">›</span>
+          </a>
+
+          <a class="nav-item" href="#">
+            <span class="nav-icon">👥</span>
+            <span>People</span>
+            <span class="nav-arrow">›</span>
+          </a>
+
+          <a class="nav-item" href="#">
+            <span class="nav-icon">📦</span>
+            <span>Products</span>
+            <span class="nav-arrow">›</span>
+          </a>
+
+          <a class="nav-item" href="sales.html">
+            <span class="nav-icon">🧾</span>
+            <span>Sales</span>
+            <span class="nav-arrow">›</span>
+          </a>
+
+          <a class="nav-item" href="#">
+            <span class="nav-icon">🔄</span>
+            <span>Transfer</span>
+            <span class="nav-arrow">›</span>
+          </a>
+
+          <a class="nav-item" href="#">
+            <span class="nav-icon">🛒</span>
+            <span>Purchases</span>
+            <span class="nav-arrow">›</span>
+          </a>
+
+          <a class="nav-item" href="#">
+            <span class="nav-icon">↩️</span>
+            <span>Sales return</span>
+            <span class="nav-arrow">›</span>
+          </a>
+
+          <a class="nav-item" href="#">
+            <span class="nav-icon">💼</span>
+            <span>Accounts</span>
+            <span class="nav-arrow">›</span>
+          </a>
+
+          <a class="nav-item" href="#">
+            <span class="nav-icon">📊</span>
+            <span>Reports</span>
+            <span class="nav-arrow">›</span>
+          </a>
+        </nav>
+        <div class="sidebar-profile">
+          <div class="sidebar-profile-user">
+            <img class="profile-avatar" id="sidebar-avatar" alt="">
+            <span class="sidebar-user-copy">
+              <span class="signed-in-user" id="sidebar-user-name"></span>
+              <span class="sidebar-user-role" id="sidebar-user-role" hidden></span>
+            </span>
+          </div>
+          <a class="sidebar-switch-view" id="owner-switch-view" href="../employeepage/employeedashboard.html" hidden>Switch to Employee POS</a>
+          <button class="sidebar-logout" id="logout-button" type="button">Log Out</button>
+          <p class="logout-feedback" id="logout-feedback" role="status" aria-live="polite"></p>
+        </div>
+      </aside>
+
+      <main class="main">
+        <div class="topbar">
+          <button class="menu-toggle" id="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false">☰</button>
+          <div class="heading">
+            <h1 class="header-title">USER MANAGEMENT</h1>
+            <p>Manage administrator and employee accounts.</p>
+            <time class="today"></time>
+          </div>
+
+          <label class="searchbox" aria-label="Search">
+            <span aria-hidden="true">🔎</span>
+            <input type="search" placeholder="Search for user..." />
+          </label>
+        </div>
+
+        <section class="content card-wrapper">
+          <div class="section-head">
+            <h2 class="section-title">User Management</h2>
+            <div class="updated">Admin user directory</div>
+          </div>
+
+          <div class="stats">
+            <div class="stat-pill stat-total">Total Users <strong>15</strong></div>
+            <div class="stat-pill stat-active">Active <strong>12</strong></div>
+            <div class="stat-pill stat-inactive">Inactive <strong>3</strong></div>
+          </div>
+
+          <div class="toolbar">
+            <label class="mini-search">
+              <span aria-hidden="true">🔎</span>
+              <input type="search" placeholder="Search for user..." />
+            </label>
+
+            <div class="tag-group">
+              <span class="tag active">[All Users]</span>
+              <span class="tag">[Admins]</span>
+              <span class="tag">[Editors]</span>
+              <span class="tag">[Viewers]</span>
+            </div>
+          </div>
+
+          <h3 class="list-title">Users List</h3>
+
+          <div class="table-card">
+            <table aria-label="Users list">
+              <thead>
+                <tr>
+                  <th>Avatar</th>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <div class="user-cell">
+                      <div class="avatar photo">AG</div>
+                    </div>
+                  </td>
+                  <td><span class="name">Alice Green</span></td>
+                  <td><span class="email">alice@email.com</span></td>
+                  <td><span class="role admin">Admin</span></td>
+                  <td><span class="online">Active</span></td>
+                  <td>
+                    <div class="actions">
+                      <a href="#" class="action-link">Edit</a>
+                      <a href="#" class="action-link danger">Delete</a>
+                    </div>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>
+                    <div class="user-cell">
+                      <div class="avatar photo">BV</div>
+                    </div>
+                  </td>
+                  <td><span class="name">Bob Vance</span></td>
+                  <td><span class="email">bob@email.com</span></td>
+                  <td><span class="role editor">Editor</span></td>
+                  <td><span class="online">Active</span></td>
+                  <td>
+                    <div class="actions">
+                      <a href="#" class="action-link">Edit</a>
+                      <a href="#" class="action-link danger">Delete</a>
+                    </div>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>
+                    <div class="user-cell">
+                      <div class="avatar photo">CD</div>
+                    </div>
+                  </td>
+                  <td><span class="name">Charlie Day</span></td>
+                  <td><span class="email">charlie@email.com</span></td>
+                  <td><span class="role viewer">Viewer</span></td>
+                  <td><span class="inactive">Inactive</span></td>
+                  <td>
+                    <div class="actions">
+                      <a href="#" class="action-link">Edit</a>
+                      <a href="#" class="action-link danger">Delete</a>
+                    </div>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>
+                    <div class="user-cell">
+                      <div class="avatar photo">CM</div>
+                    </div>
+                  </td>
+                  <td><span class="name">Carl Mrrson</span></td>
+                  <td><span class="email">charlie@email.com</span></td>
+                  <td><span class="role viewer">Viewer</span></td>
+                  <td><span class="inactive">Inactive</span></td>
+                  <td>
+                    <div class="actions">
+                      <a href="#" class="action-link">Edit</a>
+                      <a href="#" class="action-link danger">Delete</a>
+                    </div>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>
+                    <div class="user-cell">
+                      <div class="avatar photo">EG</div>
+                    </div>
+                  </td>
+                  <td><span class="name">Emy Green</span></td>
+                  <td><span class="email">enny@email.com</span></td>
+                  <td><span class="role editor">Editor</span></td>
+                  <td><span class="online">Active</span></td>
+                  <td>
+                    <div class="actions">
+                      <a href="#" class="action-link">Edit</a>
+                      <a href="#" class="action-link danger">Delete</a>
+                    </div>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>
+                    <div class="user-cell">
+                      <div class="avatar photo">DP</div>
+                    </div>
+                  </td>
+                  <td><span class="name">Davia Pax</span></td>
+                  <td><span class="email">darin@email.com</span></td>
+                  <td><span class="role viewer">Viewer</span></td>
+                  <td><span class="online">Active</span></td>
+                  <td>
+                    <div class="actions">
+                      <a href="#" class="action-link">Edit</a>
+                      <a href="#" class="action-link danger">Delete</a>
+                    </div>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>
+                    <div class="user-cell">
+                      <div class="avatar photo">AG</div>
+                    </div>
+                  </td>
+                  <td><span class="name">Alice Game</span></td>
+                  <td><span class="email">amia@email.com</span></td>
+                  <td><span class="role editor">Editor</span></td>
+                  <td><span class="inactive">Inactive</span></td>
+                  <td>
+                    <div class="actions">
+                      <a href="#" class="action-link">Edit</a>
+                      <a href="#" class="action-link danger">Delete</a>
+                    </div>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>
+                    <div class="user-cell">
+                      <div class="avatar photo">OG</div>
+                    </div>
+                  </td>
+                  <td><span class="name">Olie Green</span></td>
+                  <td><span class="email">goen@email.com</span></td>
+                  <td><span class="role admin">Admin</span></td>
+                  <td><span class="online">Active</span></td>
+                  <td>
+                    <div class="actions">
+                      <a href="#" class="action-link">Edit</a>
+                      <a href="#" class="action-link danger">Delete</a>
+                    </div>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>
+                    <div class="user-cell">
+                      <div class="avatar photo">BV</div>
+                    </div>
+                  </td>
+                  <td><span class="name">Bob Vance</span></td>
+                  <td><span class="email">bocs@email.com</span></td>
+                  <td><span class="role editor">Editor</span></td>
+                  <td><span class="online">Active</span></td>
+                  <td>
+                    <div class="actions">
+                      <a href="#" class="action-link">Edit</a>
+                      <a href="#" class="action-link danger">Delete</a>
+                    </div>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>
+                    <div class="user-cell">
+                      <div class="avatar photo">CD</div>
+                    </div>
+                  </td>
+                  <td><span class="name">Charlie Day</span></td>
+                  <td><span class="email">charlie@email.com</span></td>
+                  <td><span class="role viewer">Viewer</span></td>
+                  <td><span class="online">Active</span></td>
+                  <td>
+                    <div class="actions">
+                      <a href="#" class="action-link">Edit</a>
+                      <a href="#" class="action-link danger">Delete</a>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="btn-row">
+            <button class="add-btn" type="button">+ Add New User</button>
+          </div>
+        </section>
+      </main>
+    </div>
+    <script src="admin-profile.js"></script>
+    <script src="admin-global.js?v=20261009-admin-nav-v1"></script>
+    <script>
+      (async () => {
+        try {
+          const response = await fetch("../api/session.php", { credentials: "same-origin" });
+          const session = await response.json();
+          if (!response.ok || !session.user) throw new Error("Your admin session has expired.");
+          window.renderAdminProfile(session.user);
+          document.getElementById("logout-button").addEventListener("click", async event => {
+            const button = event.currentTarget;
+            button.disabled = true;
+            try {
+              const logout = await fetch("../api/logout.php", {
+                method: "POST",
+                credentials: "same-origin",
+                headers: { "Content-Type": "application/json", "X-CSRF-Token": session.csrfToken },
+                body: "{}"
+              });
+              if (!logout.ok) throw new Error("Unable to log out. Please try again.");
+              window.location.href = "Login.html";
+            } catch (error) {
+              document.getElementById("logout-feedback").textContent = error.message;
+              button.disabled = false;
+            }
+          });
+        } catch {
+          window.location.href = "Login.html?error=session";
+        }
+      })();
+      const sidebar = document.getElementById("sidebar");
+      const menuToggle = document.getElementById("menu-toggle");
+      menuToggle.addEventListener("click", () => {
+        const isOpen = sidebar.classList.toggle("open");
+        menuToggle.setAttribute("aria-expanded", String(isOpen));
+        menuToggle.setAttribute("aria-label", isOpen ? "Close navigation" : "Open navigation");
+      });
+    </script>
+  </body>
+</html>

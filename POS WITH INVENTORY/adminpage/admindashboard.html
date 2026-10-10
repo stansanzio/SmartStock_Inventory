@@ -1,0 +1,1365 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#eef2fb">
+    <title>Dashboard Overview | SmartStock POS</title>
+    <link rel="stylesheet" href="admin-approvals.css">
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: Inter, "Segoe UI", Arial, sans-serif;
+        color: #202637;
+        background: #eef2fb;
+        font-synthesis: none;
+        text-rendering: optimizeLegibility;
+        --blue: #526fa8;
+        --blue-dark: #3f5c92;
+        --sidebar: #edf1fa;
+        --line: #e4e7ee;
+        --muted: #748096;
+        --purple: #bd70dc;
+        --orange: #efa876;
+      }
+
+      button, input { font: inherit; }
+
+      .search {
+        width: min(270px, 34vw);
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 9px 13px;
+        background: rgba(255,255,255,.85);
+        border: 1px solid #d9deea;
+        border-radius: 999px;
+        box-shadow: 0 3px 10px rgba(49, 61, 87, .06);
+        color: #727d90;
+      }
+
+      .search[hidden] { display: none; }
+
+      .search input {
+        width: 100%;
+        min-width: 0;
+        padding: 0;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: #283246;
+        font-size: 13px;
+      }
+
+      .search input::placeholder { color: #8992a1; }
+
+      .sales-card { padding: 17px 21px 14px; }
+
+      .sales-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .sales-head h2, .products-heading h2 {
+        margin: 0;
+        color: #202637;
+        font-size: 20px;
+        letter-spacing: -.025em;
+      }
+
+      .sales-total {
+        margin-top: 7px;
+        font-size: 19px;
+        font-weight: 750;
+        letter-spacing: -.02em;
+      }
+
+      .chart-side { text-align: right; }
+
+      .chart-caption { margin: 3px 0 7px; color: #596376; font-size: 12px; }
+
+      .ranges {
+        display: inline-flex;
+        padding: 2px;
+        border: 1px solid #d6d9e0;
+        border-radius: 9px;
+        background: #f4f5f8;
+      }
+
+      .range-button {
+        padding: 5px 9px;
+        border: 0;
+        border-radius: 7px;
+        background: transparent;
+        color: #374052;
+        font-size: 11px;
+        cursor: pointer;
+      }
+
+      .range-button:hover { background: #e8eaf0; }
+
+      .range-button.selected {
+        background: #cbd3e6;
+        color: #263652;
+        box-shadow: 0 1px 3px rgba(39, 49, 71, .12);
+      }
+
+      .chart-wrap { margin-top: 9px; overflow-x: auto; }
+
+      #sales-chart { display: block; width: 100%; min-width: 490px; height: 192px; }
+
+      .grid-line { stroke: #e8e9ee; stroke-width: 1; }
+      .axis-label { fill: #737b89; font: 11px "Segoe UI", Arial, sans-serif; }
+      .month-label { fill: #4c5462; font: 11px "Segoe UI", Arial, sans-serif; }
+      .chart-empty-label { fill: #737b89; font: 13px "Segoe UI", Arial, sans-serif; }
+      .legend {
+        display: flex;
+        align-items: center;
+        gap: 17px;
+        padding: 2px 0 0 5px;
+        color: #353d4c;
+        font-size: 12px;
+      }
+
+      .legend span { display: inline-flex; align-items: center; gap: 6px; }
+      .legend i { width: 11px; height: 11px; border-radius: 3px; }
+      .legend .income-swatch { background: var(--purple); }
+      .legend .expense-swatch { background: var(--orange); }
+      .products-card { margin-top: 15px; padding: 14px 17px 10px; }
+      .products-overview-grid { display: grid; grid-template-columns: minmax(280px, .85fr) minmax(0, 1.55fr); align-items: stretch; gap: 15px; margin-top: 15px; }
+      .products-overview-grid .products-card { min-width: 0; margin-top: 0; }
+      .product-mix-card { display: flex; flex-direction: column; }
+      .product-mix-heading { margin: 0 3px 7px; }
+      .product-mix-heading h2 { margin: 0; color: #202637; font-size: 16px; font-weight: 650; }
+      .product-mix-heading p { margin: 4px 0 0; color: #778195; font-size: 11px; }
+      .product-mix-content { min-height: 230px; display: grid; grid-template-columns: minmax(120px, .9fr) minmax(0, 1.1fr); align-items: center; gap: 8px; flex: 1; }
+      .product-mix-chart { width: min(100%, 220px); display: block; margin: 0 auto; overflow: visible; }
+      .product-mix-track { fill: none; stroke: #edf0f5; stroke-width: 22; }
+      .product-mix-slice { fill: none; stroke-width: 22; stroke-linecap: butt; cursor: help; transition: stroke-width .16s ease, opacity .16s ease; }
+      .product-mix-slice:hover { stroke-width: 27; }
+      .product-mix-center-label { fill: #778195; font: 11px "Segoe UI", Arial, sans-serif; text-anchor: middle; }
+      .product-mix-center-value { fill: #26344a; font: 700 15px "Segoe UI", Arial, sans-serif; text-anchor: middle; }
+      .product-mix-legend { display: grid; gap: 9px; min-width: 0; margin: 0; padding: 0; list-style: none; }
+      .product-mix-legend li { display: grid; grid-template-columns: 10px minmax(0, 1fr) auto; align-items: center; gap: 7px; min-width: 0; color: #465269; font-size: 11px; }
+      .product-mix-swatch { width: 9px; height: 9px; border-radius: 3px; }
+      .product-mix-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .product-mix-share { color: #27354a; font-weight: 700; white-space: nowrap; }
+      .product-mix-units { grid-column: 2 / 4; margin-top: -5px; color: #8490a2; font-size: 10px; }
+      .product-mix-empty { grid-column: 1 / -1; color: #778195; font-size: 12px; text-align: center; }
+
+      .products-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin: 0 3px 12px;
+      }
+
+      .quick-stats { display: flex; align-items: center; gap: 17px; }
+
+      .quick-stat { display: flex; align-items: center; gap: 8px; }
+
+      .stat-icon {
+        width: 32px;
+        height: 32px;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        background: #4684c1;
+        color: white;
+        box-shadow: 0 3px 8px rgba(44, 91, 145, .2);
+      }
+
+      .stat-icon svg { width: 16px; height: 16px; }
+      .stat-copy small { display: block; color: #515b6e; font-size: 9px; }
+      .stat-copy strong { display: block; margin-top: 2px; font-size: 12px; }
+
+      .table-scroll { overflow-x: auto; }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+        font-size: 14px;
+      }
+
+      thead { background: #eef1f8; }
+
+      th {
+        padding: 10px 14px;
+        color: #374052;
+        font-weight: 550;
+      }
+
+      th:first-child { border-radius: 8px 0 0 8px; }
+      th:last-child { border-radius: 0 8px 8px 0; }
+
+      td { padding: 10px 14px; border-bottom: 1px solid #e5e6ea; color: #252a34; }
+      tbody tr:last-child td { border-bottom: 0; }
+      td:nth-child(2), th:nth-child(2) { text-align: center; }
+      td:last-child, th:last-child { text-align: right; }
+      .empty-row { padding: 20px 14px; text-align: center !important; color: var(--muted); }
+
+      .menu-toggle {
+        display: none;
+        width: 38px;
+        height: 38px;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #dce1ec;
+        border-radius: 10px;
+        background: white;
+        color: #364562;
+        font-size: 20px;
+        cursor: pointer;
+      }
+
+      @media (min-width: 1200px) {
+        .sales-card { padding: 20px 25px 16px; }
+        #sales-chart { height: 225px; }
+      }
+
+      @media (max-width: 820px) {
+        .quick-stats { gap: 10px; }
+      }
+
+      @media (max-width: 620px) {
+        .search { width: 40px; padding: 10px; flex: 0 0 40px; }
+        .search input { display: none; }
+        .sales-card { padding: 15px 13px 13px; }
+        .sales-head { flex-direction: column; }
+        .chart-side { width: 100%; text-align: left; }
+        .chart-caption { display: none; }
+        .ranges { margin-top: 1px; }
+        .range-button { padding: 6px 10px; }
+        #sales-chart { height: 180px; }
+        .products-card { padding: 13px 11px 8px; }
+        .product-mix-content { min-height: 200px; }
+        .products-heading { align-items: flex-start; flex-direction: column; }
+        .quick-stats { width: 100%; justify-content: space-between; }
+        td, th { padding: 9px 10px; font-size: 12px; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+      }
+      .content { max-width: none; margin-top: 0; }
+      .metric-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px; margin-bottom: 15px; }
+      .metric-card { min-width: 0; min-height: 104px; display: flex; align-items: center; gap: 14px; padding: 18px 20px; }
+      .metric-icon { width: 46px; height: 46px; flex: 0 0 46px; display: grid; place-items: center; border-radius: 50%; }
+      .metric-icon svg { width: 23px; height: 23px; }
+      .metric-icon.revenue { color: #6c4ac4; background: #eee8fb; }
+      .metric-icon.orders { color: #187f78; background: #e1f4f2; }
+      .metric-icon.average { color: #24846d; background: #e1f5ee; }
+      .metric-copy { min-width: 0; }
+      .metric-label { display: block; color: #687386; font-size: 12px; }
+      .metric-value { display: block; margin-top: 4px; color: #1f2938; font-size: clamp(20px, 2vw, 25px); font-weight: 760; letter-spacing: -.035em; white-space: nowrap; }
+      .metric-change { display: inline-block; margin-top: 4px; color: #269b6d; font-size: 11px; font-weight: 650; }
+      .metric-change.negative { color: #c24747; }
+      .sales-card { padding: 18px 20px 13px; }
+      .sales-head h2, .products-heading h2 { font-size: 17px; font-weight: 650; }
+      .sales-total { margin-top: 5px; font-size: 20px; }
+      #sales-chart { height: 204px; }
+      .revenue-area { fill: url("#revenueAreaGradient"); }
+      .revenue-line { fill: none; stroke: #6e58a7; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+      .revenue-point { fill: #fff; stroke: #6e58a7; stroke-width: 2; }
+      .legend { display: none; }
+      .products-card { margin-top: 15px; padding: 14px 16px 8px; }
+      .products-heading { margin-bottom: 10px; }
+      .quick-stats { gap: 14px; }
+      .quick-stat { gap: 6px; }
+      .stat-icon { width: 28px; height: 28px; }
+      .stat-copy small { font-size: 9px; }
+      .stat-copy strong { font-size: 11px; }
+      table { font-size: 12px; }
+      thead { background: #f0f1f5; }
+      th { padding: 8px 10px; font-size: 11px; }
+      td { padding: 7px 10px; }
+      td:nth-child(2), th:nth-child(2) { text-align: left; }
+      td:nth-child(3), th:nth-child(3) { text-align: center; }
+      .rank-pill { width: 20px; height: 20px; display: inline-grid; place-items: center; border-radius: 50%; color: #53617a; background: #edf0f7; font-size: 10px; font-weight: 750; }
+      .rank-pill.rank-1 { color: #55427e; background: #e8e1f8; }
+      .rank-pill.rank-2 { color: #34756d; background: #dff1ec; }
+      .rank-pill.rank-3 { color: #92621d; background: #f8ebd0; }
+      .product-name-cell { display: flex; align-items: center; gap: 9px; }
+      .product-thumbnail { width: 24px; height: 24px; flex: 0 0 24px; display: grid; place-items: center; overflow: hidden; border-radius: 6px; background: #f0f2f6; color: #7c8798; font-size: 10px; font-weight: 700; }
+      .product-thumbnail img { width: 100%; height: 100%; object-fit: cover; }
+      .quick-stats .stat-icon:first-child { background: #3794ad; }
+      .quick-stats .quick-stat:nth-child(2) .stat-icon { background: #4aa9a1; }
+      @media (max-width: 820px) {
+        .products-overview-grid { grid-template-columns: 1fr; }
+        .metric-grid { gap: 10px; }
+        .metric-card { gap: 10px; padding: 14px; }
+        .metric-icon { width: 40px; height: 40px; flex-basis: 40px; }
+      }
+      @media (max-width: 620px) {
+        .metric-grid { grid-template-columns: 1fr; gap: 9px; }
+        .metric-card { min-height: 82px; }
+        .sales-card { padding: 15px 13px 13px; }
+        .products-heading { align-items: flex-start; flex-direction: row; }
+        .quick-stats { width: auto; justify-content: flex-end; }
+        .quick-stat { gap: 4px; }
+        .stat-copy small { font-size: 8px; }
+        .stat-copy strong { font-size: 10px; }
+      }
+      .account-actions { display: flex; align-items: center; gap: 12px; }
+      .signed-in-user { color: var(--muted); font-size: 13px; }
+      .logout-button, .user-form button, .delete-user-button, .edit-user-button {
+        border: 0; border-radius: 8px; cursor: pointer; font: inherit; font-weight: 700;
+      }
+      .logout-button { padding: 9px 13px; color: #fff; background: #7452c8; }
+      .user-management-tools { display: grid; gap: 18px; margin-bottom: 20px; }
+      .user-create-form { display: grid; grid-template-columns: 1.2fr 1fr 1fr .8fr .9fr auto; gap: 10px; align-items: end; }
+      .user-create-form label { display: grid; gap: 6px; color: var(--muted); font-size: 12px; }
+      .user-create-form input, .user-create-form select { width: 100%; min-width: 0; padding: 10px 11px; border: 1px solid var(--line); border-radius: 8px; color: #252a34; background: #fff; font: inherit; font-size: 13px; }
+      .user-form button { min-height: 39px; padding: 9px 14px; color: #fff; background: #7452c8; }
+      .user-form button:disabled, .logout-button:disabled { cursor: wait; opacity: .65; }
+      .user-feedback { min-height: 18px; margin: 0; color: var(--muted); font-size: 13px; }
+      .user-feedback.error { color: #b42318; }
+      .delete-user-button { padding: 7px 10px; color: #a52222; background: #fff0ef; font-size: 12px; }
+      .edit-user-button { padding: 7px 10px; color: #4c4ca5; background: #efedff; font-size: 12px; }
+      .user-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+      .user-edit-dialog { width: min(460px, calc(100% - 28px)); padding: 22px; border: 0; border-radius: 14px; box-shadow: 0 20px 70px rgba(28,40,63,.25); }
+      .user-edit-dialog::backdrop { background: rgba(27,37,57,.42); backdrop-filter: blur(2px); }
+      .user-edit-dialog h2 { margin: 0 0 16px; color: #202637; font-size: 20px; }
+      .user-edit-form { display: grid; gap: 12px; }
+      .user-edit-form label { display: grid; gap: 6px; color: var(--muted); font-size: 12px; }
+      .user-edit-form input { width: 100%; padding: 10px 11px; border: 1px solid var(--line); border-radius: 8px; color: #252a34; background: #fff; font: inherit; font-size: 13px; }
+      .user-edit-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+      .user-edit-actions .cancel-edit { padding: 9px 14px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: #46536b; cursor: pointer; font: inherit; font-weight: 650; }
+      .user-edit-actions button:disabled { cursor: wait; opacity: .65; }
+      .user-role { display: inline-block; padding: 4px 9px; border-radius: 999px; font-size: 12px; font-weight: 650; }
+      .user-role.admin { color: #5f43a5; background: #f0eaff; }
+      .user-role.employee { color: #25654a; background: #e8f6ee; }
+      .user-role.owner { color: #805b08; background: #fff2c7; }
+      .employee-of-month-star { color: #e7a900; white-space: nowrap; }
+      @media (max-width: 760px) {
+        .user-create-form { grid-template-columns: 1fr 1fr; }
+      }
+      @media (max-width: 480px) {
+        .user-create-form { grid-template-columns: 1fr; }
+        .account-actions { gap: 7px; }
+        .signed-in-user { max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      }
+      @media (max-width: 620px) {
+        .signed-in-user { display: none; }
+      }
+    </style>
+    <link rel="stylesheet" href="admin-theme.css?v=20261004-admin-v8">
+    <link rel="stylesheet" href="../page-transitions.css">
+  </head>
+  <body class="auth-pending">
+    <div class="app">
+      <aside class="sidebar" id="sidebar" aria-label="Main navigation">
+        <a class="brand" href="admindashboard.html" aria-label="SmartStock POS dashboard">
+          <img src="../images/image.png" alt="SmartStock POS">
+        </a>
+        <nav class="nav">
+          <a class="nav-link active" href="#dashboard-view" data-view="dashboard-view" aria-current="page">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="2.5" y="2.5" width="8" height="8" rx="2" fill="currentColor" opacity=".8"/><rect x="13.5" y="2.5" width="8" height="8" rx="2" fill="currentColor" opacity=".55"/><rect x="2.5" y="13.5" width="8" height="8" rx="2" fill="currentColor" opacity=".55"/><rect x="13.5" y="13.5" width="8" height="8" rx="2" fill="currentColor" opacity=".8"/></svg>
+            <span>Dashboard</span>
+          </a>
+          <a class="nav-link" href="#user-management" data-view="user-management">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="7" r="4" fill="currentColor" opacity=".48" stroke="currentColor" stroke-width="1.4"/><path d="M3 21c.6-4.4 3.7-7 9-7s8.4 2.6 9 7" fill="currentColor" opacity=".35" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <span>User Management</span><span class="nav-arrow">›</span>
+          </a>
+          <a class="nav-link" href="usermanagement.html">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="9" cy="8" r="4" fill="currentColor" opacity=".4" stroke="currentColor" stroke-width="1.4"/><circle cx="18" cy="9" r="3" fill="currentColor" opacity=".25" stroke="currentColor" stroke-width="1.3"/><path d="M1.5 21c.4-4.1 3-6.5 7.5-6.5s7.2 2.4 7.5 6.5M15 15c4.4-.8 7.1 1.3 7.5 5" fill="currentColor" opacity=".25" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            <span>Users</span><span class="nav-arrow">›</span>
+          </a>
+          <a class="nav-link" href="products.html">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m2 7 10-5 10 5-10 5L2 7Z" fill="currentColor" opacity=".35" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M2 7v10l10 5V12M22 7v10l-10 5" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+            <span>Products</span><span class="nav-arrow">›</span>
+          </a>
+          <a class="nav-link" href="sales.html">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 4h16v16H4z" fill="currentColor" opacity=".18" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 8h8M8 12h8M8 16h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M7 2v4m10-4v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <span>Sales</span><span class="nav-arrow">›</span>
+          </a>
+          <a class="nav-link" href="purchases.html">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M2 3h2l2.5 13h12L21 7H5" fill="currentColor" opacity=".22" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="9" cy="20" r="1.7" fill="currentColor"/><circle cx="18" cy="20" r="1.7" fill="currentColor"/></svg>
+            <span>Purchases</span><span class="nav-arrow">›</span>
+          </a>
+          <a class="nav-link" href="sales.html">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="2" width="14" height="20" rx="2" fill="currentColor" opacity=".22" stroke="currentColor" stroke-width="1.4"/><path d="M7 7h6m-6 4h6m-6 4h3m8-7h4v12h-4zM8 19v-2m3 2v-5m3 5v-8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            <span>Reports</span><span class="nav-arrow">›</span>
+          </a>
+        </nav>
+        <div class="sidebar-profile">
+          <div class="sidebar-profile-user">
+            <img class="profile-avatar" id="sidebar-avatar" alt="">
+            <span class="sidebar-user-copy">
+              <span class="signed-in-user" id="sidebar-user-name"></span>
+              <span class="sidebar-user-role" id="sidebar-user-role" hidden></span>
+            </span>
+          </div>
+          <a class="sidebar-switch-view" id="owner-switch-view" href="../employeepage/employeedashboard.html" hidden>Switch to Employee POS</a>
+          <button class="sidebar-logout" id="logout-button" type="button">Log Out</button>
+          <p class="logout-feedback" id="logout-feedback" role="status" aria-live="polite"></p>
+        </div>
+      </aside>
+
+      <main>
+        <header class="topbar">
+          <button class="menu-toggle" id="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false">☰</button>
+          <div class="page-heading">
+            <h1 id="page-title">DASHBOARD OVERVIEW</h1>
+            <p id="page-description">Sales performance and top-selling products.</p>
+            <time class="today" id="today"></time>
+          </div>
+          <label class="search" id="dashboard-search">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.5" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 4.5 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <input id="product-search" type="search" placeholder="Search top-selling products" aria-label="Search top-selling products">
+          </label>
+        </header>
+
+        <div class="content" id="dashboard-view">
+          <section class="metric-grid" aria-label="Sales summary">
+            <article class="card card-wrapper metric-card">
+              <span class="metric-icon revenue" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M4 19V13m5 6V9m5 10V5m5 14V3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="m3 9 5-4 4 2 8-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </span>
+              <span class="metric-copy">
+                <span class="metric-label">Total Revenue</span>
+                <strong class="metric-value" id="metric-revenue">₱0.00</strong>
+                <span class="metric-change" id="metric-revenue-change">Calculating month-over-month…</span>
+              </span>
+            </article>
+            <article class="card card-wrapper metric-card">
+              <span class="metric-icon orders" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M6 3h9l4 4v14H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M14 3v5h5M8 12h8m-8 4h8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+              </span>
+              <span class="metric-copy">
+                <span class="metric-label">Total Orders</span>
+                <strong class="metric-value" id="metric-orders">0</strong>
+              </span>
+            </article>
+            <article class="card card-wrapper metric-card">
+              <span class="metric-icon average" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M12 3v18m5-14.5C16 5 14.3 4 12 4 9.5 4 8 5.3 8 7s1.4 2.7 4 3.5 4 1.6 4 3.5-1.7 3.5-4 3.5-4.3-1-5-2.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              </span>
+              <span class="metric-copy">
+                <span class="metric-label">Average Order Value</span>
+                <strong class="metric-value" id="metric-average-order">₱0.00</strong>
+              </span>
+            </article>
+          </section>
+          <section class="card card-wrapper sales-card" aria-labelledby="sales-title">
+            <div class="sales-head">
+              <div>
+                <h2 id="sales-title">Sales Overview</h2>
+                <div class="sales-total" id="sales-total">₱0.00</div>
+              </div>
+              <div class="chart-side">
+                <p class="chart-caption" id="chart-caption">Last 12 months</p>
+                <div class="ranges" role="group" aria-label="Sales chart time range">
+                  <button class="range-button selected" type="button" data-range="12" aria-pressed="true">12 Months</button>
+                  <button class="range-button" type="button" data-range="30" aria-pressed="false">30 Days</button>
+                  <button class="range-button" type="button" data-range="7" aria-pressed="false">7 Days</button>
+                  <button class="range-button" type="button" data-range="24" aria-pressed="false">24 Hours</button>
+                </div>
+              </div>
+            </div>
+            <div class="chart-wrap">
+              <svg id="sales-chart" viewBox="0 0 720 220" role="img" aria-label="Chart showing revenue and order volume"></svg>
+            </div>
+            <div class="legend" aria-hidden="true">
+              <span><i class="income-swatch"></i>Revenue</span>
+              <span><i class="expense-swatch"></i>Orders</span>
+            </div>
+          </section>
+
+          <div class="products-overview-grid">
+            <section class="card products-card product-mix-card" aria-labelledby="product-mix-title">
+              <div class="product-mix-heading">
+                <h2 id="product-mix-title">Top Product Sales Mix</h2>
+                <p id="product-mix-caption">Revenue share for the selected period</p>
+              </div>
+              <div class="product-mix-content">
+                <svg class="product-mix-chart" id="product-mix-chart" viewBox="0 0 220 220" role="img" aria-label="Top products revenue share chart">
+                  <circle class="product-mix-track" cx="110" cy="110" r="78"></circle>
+                  <text class="product-mix-center-label" x="110" y="103">Product sales</text>
+                  <text class="product-mix-center-value" id="product-mix-total" x="110" y="126">₱0.00</text>
+                </svg>
+                <ul class="product-mix-legend" id="product-mix-legend" aria-label="Top product sales breakdown">
+                  <li class="product-mix-empty">Loading product sales…</li>
+                </ul>
+              </div>
+            </section>
+
+          <section class="card card-wrapper products-card" aria-labelledby="products-title">
+            <div class="products-heading">
+              <h2 id="products-title">Top Selling Products</h2>
+              <div class="quick-stats">
+                <div class="quick-stat">
+                  <span class="stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="m4 13 9-9h6v6l-9 9-6-6Z" stroke="white" stroke-width="1.7" stroke-linejoin="round"/><circle cx="16" cy="7" r="1.2" fill="white"/><path d="m8 13 3 3m-1-5 3 3" stroke="white" stroke-width="1.4" stroke-linecap="round"/></svg></span>
+                  <span class="stat-copy"><small>Sale Size</small><strong id="sales-total-products">₱0.00</strong></span>
+                </div>
+                <div class="quick-stat">
+                  <span class="stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="white" stroke-width="1.6"/><path d="M8 9h8l-.7 8H8.7L8 9Zm2-1a2 2 0 0 1 4 0" stroke="white" stroke-width="1.5" stroke-linejoin="round"/></svg></span>
+                  <span class="stat-copy"><small>Order</small><strong id="sales-order-count">0</strong></span>
+                </div>
+              </div>
+            </div>
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr><th scope="col">#</th><th scope="col">Product Name</th><th scope="col">Total Sold</th><th scope="col">Total Revenue</th></tr>
+                </thead>
+                <tbody id="product-rows">
+                  <tr><td class="empty-row" colspan="4">No sales data yet.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+          </div>
+        </div>
+
+        <section class="content" id="user-management" aria-labelledby="user-management-title" hidden>
+          <section class="card products-card">
+            <div class="products-heading">
+              <div>
+                <h2 id="user-management-title">User Management</h2>
+                <p class="chart-caption">Add accounts or review administrator access requests. ⭐ marks the employee with the most units sold this month.</p>
+              </div>
+            </div>
+            <div id="admin-approval-root"></div>
+            <div class="user-management-tools">
+              <form class="user-form user-create-form" id="user-create-form">
+                <label>Name
+                  <input name="displayName" maxlength="100" autocomplete="name" required>
+                </label>
+                <label>Username
+                  <input name="username" minlength="3" maxlength="50" pattern="[A-Za-z0-9._\-]+" autocomplete="off" required>
+                </label>
+                <label>Password (10+ characters)
+                  <input name="password" type="password" minlength="10" maxlength="4096" autocomplete="new-password" required>
+                </label>
+                <label>Role
+                  <select name="role" required>
+                    <option value="admin">Admin</option>
+                    <option value="employee">Employee</option>
+                  </select>
+                </label>
+                <label>Avatar
+                  <select name="avatarId" id="create-avatar-select" required></select>
+                </label>
+                <button type="submit">Add user</button>
+              </form>
+              <p class="user-feedback" id="user-feedback" role="status" aria-live="polite"></p>
+            </div>
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">Avatar</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Username</th>
+                    <th scope="col">Role</th>
+                    <th scope="col">Created</th>
+                    <th scope="col">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="user-rows">
+                  <tr><td class="empty-row" colspan="6">Loading users…</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <dialog class="user-edit-dialog" id="user-edit-dialog" aria-labelledby="edit-user-title">
+      <h2 id="edit-user-title">Edit employee</h2>
+      <form class="user-edit-form" id="user-edit-form">
+        <input type="hidden" name="id">
+        <label>Name
+          <input name="displayName" maxlength="100" autocomplete="name" required>
+        </label>
+        <label>Username
+          <input name="username" minlength="3" maxlength="50" pattern="[A-Za-z0-9._\-]+" autocomplete="off" required>
+        </label>
+        <label>New password (leave blank to keep current password)
+          <input name="password" type="password" minlength="10" maxlength="4096" autocomplete="new-password">
+        </label>
+        <p class="user-feedback" id="edit-user-feedback" role="status" aria-live="polite"></p>
+        <div class="user-edit-actions">
+          <button class="cancel-edit" id="cancel-edit-user" type="button">Cancel</button>
+          <button type="submit">Save changes</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="avatar-picker-dialog" id="avatar-picker-dialog" aria-labelledby="avatar-picker-title">
+      <form id="avatar-picker-form">
+        <h2 id="avatar-picker-title">Choose a profile avatar</h2>
+        <p class="avatar-picker-copy" id="avatar-picker-user"></p>
+        <div class="avatar-options" id="avatar-options"></div>
+        <p class="user-feedback" id="avatar-picker-feedback" role="status" aria-live="polite"></p>
+        <div class="user-edit-actions">
+          <button class="cancel-edit" id="cancel-avatar-picker" type="button">Cancel</button>
+          <button type="submit">Save avatar</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="admin-profile.js"></script>
+    <script src="admin-global.js?v=20261009-admin-nav-v1"></script>
+    <script src="admin-approvals.js"></script>
+    <script>
+      const svgNamespace = "http://www.w3.org/2000/svg";
+      const chart = document.getElementById("sales-chart");
+      const rangeButtons = document.querySelectorAll(".range-button");
+      const chartCaption = document.getElementById("chart-caption");
+      const productRows = document.getElementById("product-rows");
+      const productSearch = document.getElementById("product-search");
+      const pageTitle = document.getElementById("page-title");
+      const dashboardSearch = document.getElementById("dashboard-search");
+      const viewLinks = document.querySelectorAll(".nav-link[data-view]");
+      let csrfToken = "";
+      let sessionReady = false;
+      let availableAvatars = [];
+      let selectedAvatarUser = null;
+      let activeChartRange = "12";
+      let salesRefreshInProgress = false;
+      let salesRefreshQueued = false;
+      let topSellingProducts = [];
+      let salesChannel = null;
+      let employeeOfMonthId = null;
+      let currentUserProfile = null;
+      const views = {
+        "dashboard-view": document.getElementById("dashboard-view"),
+        "user-management": document.getElementById("user-management")
+      };
+      document.getElementById("today").textContent = new Intl.DateTimeFormat("en", {
+        month: "long",
+        day: "numeric",
+        year: "numeric"
+      }).format(new Date());
+
+      function setEmployeeName(container, displayName, isEmployeeOfMonth) {
+        container.replaceChildren(document.createTextNode(displayName));
+        container.title = isEmployeeOfMonth ? `${displayName} — Employee of the Month` : displayName;
+        if (isEmployeeOfMonth) {
+          const star = document.createElement("span");
+          star.className = "employee-of-month-star";
+          star.textContent = " ⭐";
+          star.setAttribute("aria-label", "Employee of the Month");
+          container.append(star);
+        }
+      }
+
+      function updateEmployeeOfMonth(leader) {
+        employeeOfMonthId = leader?.id ? Number(leader.id) : null;
+        if (currentUserProfile) {
+          currentUserProfile.isEmployeeOfMonth =
+            employeeOfMonthId !== null && Number(currentUserProfile.id) === employeeOfMonthId;
+          window.renderAdminProfile(currentUserProfile);
+        }
+        for (const row of document.querySelectorAll("#user-rows tr[data-user-id]")) {
+          const nameCell = row.querySelector(".user-display-name");
+          if (nameCell) {
+            setEmployeeName(
+              nameCell,
+              row.dataset.displayName || "",
+              employeeOfMonthId !== null && Number(row.dataset.userId) === employeeOfMonthId
+            );
+          }
+        }
+      }
+
+      function makeSvgElement(name, attributes, text) {
+        const element = document.createElementNS(svgNamespace, name);
+        for (const [key, value] of Object.entries(attributes)) {
+          element.setAttribute(key, value);
+        }
+        if (text !== undefined) element.textContent = text;
+        return element;
+      }
+
+      const dashboardCurrency = new Intl.NumberFormat("en-PH", {
+        style: "currency",
+        currency: "PHP"
+      });
+      const productMixColors = ["#6f58a7", "#39a7a0", "#e8ad55", "#5482bf", "#d8788d", "#a1a8b5"];
+
+      function drawChart(data) {
+        const plot = { left: 45, top: 10, width: 660, height: 158 };
+        chart.replaceChildren();
+        const defs = makeSvgElement("defs", {});
+        const revenueGradient = makeSvgElement("linearGradient", { id: "revenueAreaGradient", x1: "0", x2: "0", y1: "0", y2: "1" });
+        revenueGradient.append(
+          makeSvgElement("stop", { offset: "0%", "stop-color": "#8064bd", "stop-opacity": ".3" }),
+          makeSvgElement("stop", { offset: "100%", "stop-color": "#8064bd", "stop-opacity": ".025" })
+        );
+        defs.append(revenueGradient);
+        chart.append(defs);
+        chart.setAttribute("aria-label", `Sales revenue across ${data.caption.toLocaleLowerCase()}`);
+        chartCaption.textContent = data.caption;
+
+        const zeroY = plot.top + plot.height;
+        const maxRevenue = Math.max(0, ...data.chart.map(item => Number(item.revenue)));
+        chart.append(
+          makeSvgElement("line", { x1: plot.left, y1: zeroY, x2: plot.left + plot.width, y2: zeroY, class: "grid-line" }),
+          makeSvgElement("text", { x: plot.left - 9, y: zeroY + 4, "text-anchor": "end", class: "axis-label" }, "0"),
+          makeSvgElement("text", {
+            x: plot.left,
+            y: plot.top + 8,
+            "text-anchor": "start",
+            class: "axis-label"
+          }, dashboardCurrency.format(maxRevenue))
+        );
+
+        const groupWidth = plot.width / data.chart.length;
+        const revenuePoints = [];
+        data.chart.forEach((item, index) => {
+          const center = plot.left + groupWidth * (index + .5);
+          const revenueHeight = maxRevenue > 0
+            ? Math.max(0, Number(item.revenue) / maxRevenue * (plot.height - 12))
+            : 0;
+          revenuePoints.push([center, zeroY - revenueHeight, item]);
+          const labelEvery = data.chart.length > 16 ? 3 : data.chart.length > 8 ? 2 : 1;
+          if (index % labelEvery !== 0 && index !== data.chart.length - 1) return;
+          chart.append(makeSvgElement("text", {
+            x: center,
+            y: plot.top + plot.height + 17,
+            "text-anchor": "middle",
+            class: "month-label"
+          }, item.label));
+        });
+        if (revenuePoints.length > 0 && maxRevenue > 0) {
+          let linePath = `M ${revenuePoints[0][0]} ${revenuePoints[0][1]}`;
+          for (let index = 1; index < revenuePoints.length; index++) {
+            const [previousX, previousY] = revenuePoints[index - 1];
+            const [currentX, currentY] = revenuePoints[index];
+            const midpoint = (previousX + currentX) / 2;
+            linePath += ` C ${midpoint} ${previousY}, ${midpoint} ${currentY}, ${currentX} ${currentY}`;
+          }
+          const firstX = revenuePoints[0][0];
+          const lastX = revenuePoints[revenuePoints.length - 1][0];
+          chart.append(
+            makeSvgElement("path", {
+              d: `${linePath} L ${lastX} ${zeroY} L ${firstX} ${zeroY} Z`,
+              class: "revenue-area"
+            }),
+            makeSvgElement("path", { d: linePath, class: "revenue-line" })
+          );
+          revenuePoints.forEach(([x, y, item]) => {
+            const point = makeSvgElement("circle", { cx: x, cy: y, r: 3, class: "revenue-point" });
+            point.append(makeSvgElement("title", {}, `${item.label}: ${dashboardCurrency.format(Number(item.revenue))}`));
+            chart.append(point);
+          });
+        }
+        if (Number(data.orderCount) === 0) {
+          chart.append(makeSvgElement("text", {
+            x: plot.left + plot.width / 2,
+            y: plot.top + plot.height / 2,
+            "text-anchor": "middle",
+            class: "chart-empty-label"
+          }, "No sales data yet"));
+        }
+      }
+
+      rangeButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          rangeButtons.forEach((item) => {
+            const selected = item === button;
+            item.classList.toggle("selected", selected);
+            item.setAttribute("aria-pressed", String(selected));
+          });
+          activeChartRange = button.dataset.range;
+          void refreshSalesDashboard();
+        });
+      });
+
+      function renderTopSellingProducts() {
+        const query = productSearch.value.trim().toLocaleLowerCase();
+        const matches = topSellingProducts.filter((product) =>
+          String(product.product_name).toLocaleLowerCase().includes(query)
+        );
+        productRows.replaceChildren();
+        if (matches.length === 0) {
+          const row = document.createElement("tr");
+          const cell = document.createElement("td");
+          cell.colSpan = 4;
+          cell.className = "empty-row";
+          cell.textContent = topSellingProducts.length === 0
+            ? "No sales data yet."
+            : "No top-selling products match this search.";
+          row.append(cell);
+          productRows.append(row);
+          return;
+        }
+        for (const product of matches) {
+          const row = document.createElement("tr");
+          const rankIndex = topSellingProducts.indexOf(product);
+          const rankCell = document.createElement("td");
+          const rank = document.createElement("span");
+          rank.className = `rank-pill${rankIndex < 3 ? ` rank-${rankIndex + 1}` : ""}`;
+          rank.textContent = String(rankIndex + 1);
+          rankCell.append(rank);
+          const nameCell = document.createElement("td");
+          const productSummary = document.createElement("span");
+          productSummary.className = "product-name-cell";
+          const thumbnail = document.createElement("span");
+          thumbnail.className = "product-thumbnail";
+          if (product.image_url) {
+            const image = document.createElement("img");
+            image.src = product.image_url;
+            image.alt = "";
+            image.loading = "lazy";
+            image.onerror = () => {
+              thumbnail.textContent = String(product.product_name).trim().charAt(0).toLocaleUpperCase();
+            };
+            thumbnail.append(image);
+          } else {
+            thumbnail.textContent = String(product.product_name).trim().charAt(0).toLocaleUpperCase();
+          }
+          const productName = document.createElement("span");
+          productName.textContent = product.product_name;
+          productSummary.append(thumbnail, productName);
+          nameCell.append(productSummary);
+          const unitsCell = document.createElement("td");
+          unitsCell.textContent = Number(product.units_sold).toLocaleString();
+          const revenueCell = document.createElement("td");
+          revenueCell.textContent = dashboardCurrency.format(Number(product.revenue));
+          row.append(rankCell, nameCell, unitsCell, revenueCell);
+          productRows.append(row);
+        }
+      }
+
+      function renderProductSalesMix(products, productRevenueTotal, otherProductUnits, otherProductRevenue) {
+        const svg = document.getElementById("product-mix-chart");
+        const legend = document.getElementById("product-mix-legend");
+        const centerTotal = document.getElementById("product-mix-total");
+        const caption = document.getElementById("product-mix-caption");
+        const existingTrack = svg.querySelector(".product-mix-track");
+        const centerLabel = svg.querySelector(".product-mix-center-label");
+        const slices = products.map((product, index) => ({
+          name: String(product.product_name),
+          units: Number(product.units_sold),
+          revenue: Number(product.revenue),
+          color: productMixColors[index % productMixColors.length]
+        }));
+        if (Number(otherProductRevenue) > 0) {
+          slices.push({
+            name: "Other products",
+            units: Number(otherProductUnits),
+            revenue: Number(otherProductRevenue),
+            color: productMixColors[5]
+          });
+        }
+
+        svg.replaceChildren();
+        if (existingTrack) svg.append(existingTrack);
+        const group = document.createElementNS(svgNamespace, "g");
+        group.setAttribute("transform", "rotate(-90 110 110)");
+        const circumference = 2 * Math.PI * 78;
+        let offset = 0;
+        for (const slice of slices) {
+          const share = Number(productRevenueTotal) > 0
+            ? Math.max(0, slice.revenue / Number(productRevenueTotal))
+            : 0;
+          const segmentLength = circumference * share;
+          if (segmentLength > 0) {
+            const circle = makeSvgElement("circle", {
+              cx: 110,
+              cy: 110,
+              r: 78,
+              class: "product-mix-slice",
+              stroke: slice.color,
+              "stroke-dasharray": `${segmentLength} ${circumference - segmentLength}`,
+              "stroke-dashoffset": -offset
+            });
+            const sharePercent = share * 100;
+            circle.append(makeSvgElement(
+              "title",
+              {},
+              `${slice.name}: ${slice.units.toLocaleString()} units, ${sharePercent.toFixed(1)}% of sales revenue (${dashboardCurrency.format(slice.revenue)})`
+            ));
+            group.append(circle);
+          }
+          offset += segmentLength;
+        }
+        svg.append(group);
+        if (centerLabel) svg.append(centerLabel);
+        svg.append(centerTotal);
+        centerTotal.textContent = dashboardCurrency.format(Number(productRevenueTotal) || 0);
+        svg.setAttribute(
+          "aria-label",
+          `Top products and other product sales mix totaling ${dashboardCurrency.format(Number(productRevenueTotal) || 0)}`
+        );
+        caption.textContent = `Revenue share for ${document.getElementById("chart-caption").textContent.toLocaleLowerCase()}`;
+
+        legend.replaceChildren();
+        if (slices.length === 0 || Number(productRevenueTotal) <= 0) {
+          const empty = document.createElement("li");
+          empty.className = "product-mix-empty";
+          empty.textContent = "No product sales for this period.";
+          legend.append(empty);
+          return;
+        }
+        for (const slice of slices) {
+          const share = slice.revenue / Number(productRevenueTotal) * 100;
+          const item = document.createElement("li");
+          item.title = `${slice.name}: ${slice.units.toLocaleString()} units sold, ${share.toFixed(1)}% of sales revenue`;
+          const swatch = document.createElement("span");
+          swatch.className = "product-mix-swatch";
+          swatch.style.backgroundColor = slice.color;
+          swatch.setAttribute("aria-hidden", "true");
+          const name = document.createElement("span");
+          name.className = "product-mix-label";
+          name.textContent = slice.name;
+          const percent = document.createElement("span");
+          percent.className = "product-mix-share";
+          percent.textContent = `${share.toFixed(1)}%`;
+          const units = document.createElement("span");
+          units.className = "product-mix-units";
+          units.textContent = `${slice.units.toLocaleString()} units sold`;
+          item.append(swatch, name, percent, units);
+          legend.append(item);
+        }
+      }
+
+      async function refreshSalesDashboard() {
+        if (!sessionReady) return;
+        if (salesRefreshInProgress) {
+          salesRefreshQueued = true;
+          return;
+        }
+        salesRefreshInProgress = true;
+        const requestedRange = activeChartRange;
+        try {
+          const data = await requestJson(`../api/sales-dashboard.php?range=${encodeURIComponent(requestedRange)}`);
+          if (requestedRange !== activeChartRange) return;
+          updateEmployeeOfMonth(data.employeeOfMonth);
+          drawChart(data);
+          const revenue = Number(data.revenue);
+          const orderCount = Number(data.orderCount);
+          document.getElementById("sales-total").textContent = dashboardCurrency.format(revenue);
+          document.getElementById("metric-revenue").textContent = dashboardCurrency.format(revenue);
+          document.getElementById("metric-orders").textContent = orderCount.toLocaleString();
+          document.getElementById("metric-average-order").textContent =
+            dashboardCurrency.format(orderCount > 0 ? revenue / orderCount : 0);
+          const growth = document.getElementById("metric-revenue-change");
+          const monthChange = data.monthOverMonthChangePercent;
+          growth.classList.toggle("negative", monthChange !== null && Number(monthChange) < 0);
+          if (monthChange === null) {
+            growth.textContent = Number(data.currentMonthRevenue) > 0
+              ? "No sales last month"
+              : "No previous month sales to compare";
+          } else {
+            const prefix = Number(monthChange) > 0 ? "+" : "";
+            growth.textContent = `${prefix}${Number(monthChange).toFixed(1)}% vs last month`;
+          }
+          document.getElementById("sales-total-products").textContent = dashboardCurrency.format(revenue);
+          document.getElementById("sales-order-count").textContent = orderCount.toLocaleString();
+          topSellingProducts = data.products;
+          renderTopSellingProducts();
+          renderProductSalesMix(
+            data.products,
+            Number(data.productRevenueTotal),
+            Number(data.otherProductUnits),
+            Number(data.otherProductRevenue)
+          );
+        } catch (error) {
+          const row = document.createElement("tr");
+          const cell = document.createElement("td");
+          cell.colSpan = 4;
+          cell.className = "empty-row";
+          cell.textContent = error.message || "Sales data could not be loaded.";
+          row.append(cell);
+          productRows.replaceChildren(row);
+        } finally {
+          salesRefreshInProgress = false;
+          if (salesRefreshQueued) {
+            salesRefreshQueued = false;
+            void refreshSalesDashboard();
+          }
+        }
+      }
+
+      productSearch.addEventListener("input", renderTopSellingProducts);
+
+      const sidebar = document.getElementById("sidebar");
+      const menuToggle = document.getElementById("menu-toggle");
+      function showCurrentView() {
+        const viewId = window.location.hash.slice(1) || "dashboard-view";
+        const selectedView = Object.hasOwn(views, viewId) ? viewId : "dashboard-view";
+        for (const [id, view] of Object.entries(views)) {
+          view.hidden = id !== selectedView;
+        }
+        for (const link of viewLinks) {
+          const isCurrent = link.dataset.view === selectedView;
+          link.classList.toggle("active", isCurrent);
+          if (isCurrent) {
+            link.setAttribute("aria-current", "page");
+          } else {
+            link.removeAttribute("aria-current");
+          }
+        }
+        pageTitle.textContent = selectedView === "user-management"
+          ? "USER MANAGEMENT"
+          : "DASHBOARD OVERVIEW";
+        document.getElementById("page-description").textContent = selectedView === "user-management"
+          ? "Manage administrator and employee accounts."
+          : "Sales performance and top-selling products.";
+        dashboardSearch.hidden = selectedView !== "dashboard-view";
+        if (sessionReady && selectedView === "user-management") {
+          void loadUsers();
+          void window.AdminAccountApprovals.refresh(setUserFeedback);
+        }
+      }
+
+      window.addEventListener("hashchange", showCurrentView);
+      menuToggle.addEventListener("click", () => {
+        const isOpen = sidebar.classList.toggle("open");
+        menuToggle.setAttribute("aria-expanded", String(isOpen));
+        menuToggle.setAttribute("aria-label", isOpen ? "Close navigation" : "Open navigation");
+      });
+      sidebar.addEventListener("click", (event) => {
+        if (event.target.closest(".nav-link") && window.matchMedia("(max-width: 620px)").matches) {
+          sidebar.classList.remove("open");
+          menuToggle.setAttribute("aria-expanded", "false");
+          menuToggle.setAttribute("aria-label", "Open navigation");
+        }
+      });
+
+      async function requestJson(url, options = {}) {
+        const headers = new Headers(options.headers || {});
+        if (options.body) {
+          headers.set("Content-Type", "application/json");
+          headers.set("X-CSRF-Token", csrfToken);
+        }
+        const response = await fetch(url, {
+          ...options,
+          headers,
+          credentials: "same-origin"
+        });
+        const result = await response.json();
+        if (!response.ok) {
+          if (response.status === 401) {
+            window.location.href = "Login.html?error=session";
+          }
+          throw new Error(result.error || "The request could not be completed.");
+        }
+        return result;
+      }
+
+      function setUserFeedback(message, isError = false) {
+        const feedback = document.getElementById("user-feedback");
+        feedback.textContent = message;
+        feedback.classList.toggle("error", isError);
+      }
+
+      async function loadUsers() {
+        const rows = document.getElementById("user-rows");
+        rows.replaceChildren();
+        try {
+          const result = await requestJson("../api/users.php");
+          updateEmployeeOfMonth(result.employeeOfMonth);
+          availableAvatars = result.avatars;
+          const avatarSelect = document.getElementById("create-avatar-select");
+          const selectedCreateAvatar = avatarSelect.value || String(availableAvatars[0]?.id || "");
+          avatarSelect.replaceChildren();
+          for (const avatar of availableAvatars) {
+            const option = document.createElement("option");
+            option.value = String(avatar.id);
+            option.textContent = avatar.label;
+            avatarSelect.append(option);
+          }
+          avatarSelect.value = selectedCreateAvatar;
+          if (result.users.length === 0) {
+            const row = document.createElement("tr");
+            const cell = document.createElement("td");
+            cell.colSpan = 6;
+            cell.className = "empty-row";
+            cell.textContent = "No users found.";
+            row.append(cell);
+            rows.append(row);
+            return;
+          }
+          for (const user of result.users) {
+            const row = document.createElement("tr");
+            row.dataset.userId = String(user.id);
+            row.dataset.displayName = user.display_name;
+            const avatarCell = document.createElement("td");
+            const avatarImage = document.createElement("img");
+            avatarImage.className = "table-avatar";
+            avatarImage.src = user.avatarUrl;
+            avatarImage.alt = `${user.display_name}'s avatar`;
+            avatarCell.append(avatarImage);
+            row.append(avatarCell);
+            const nameCell = document.createElement("td");
+            nameCell.className = "user-display-name";
+            setEmployeeName(
+              nameCell,
+              user.display_name,
+              user.isEmployeeOfMonth || (employeeOfMonthId !== null && Number(user.id) === employeeOfMonthId)
+            );
+            row.append(nameCell);
+            const usernameCell = document.createElement("td");
+            usernameCell.textContent = user.username;
+            row.append(usernameCell);
+            const roleCell = document.createElement("td");
+            const roleBadge = document.createElement("span");
+            roleBadge.className = `user-role ${user.role}`;
+            roleBadge.textContent = user.role === "owner" ? "Owner" : user.role === "admin" ? "Admin" : "Employee";
+            roleCell.append(roleBadge);
+            row.append(roleCell);
+            const createdAt = new Date(user.created_at.replace(" ", "T"));
+            const createdCell = document.createElement("td");
+            createdCell.textContent = Number.isNaN(createdAt.getTime()) ? user.created_at : createdAt.toLocaleDateString();
+            row.append(createdCell);
+            const actionCell = document.createElement("td");
+            const actionButtons = document.createElement("div");
+            actionButtons.className = "user-actions";
+            const avatarButton = document.createElement("button");
+            avatarButton.className = "edit-user-button";
+            avatarButton.type = "button";
+            avatarButton.textContent = "Avatar";
+            avatarButton.setAttribute("aria-label", `Change ${user.display_name}'s avatar`);
+            avatarButton.addEventListener("click", () => {
+              selectedAvatarUser = user;
+              document.getElementById("avatar-picker-user").textContent = `Choose an avatar for ${user.display_name}.`;
+              const options = document.getElementById("avatar-options");
+              options.replaceChildren();
+              for (const avatar of availableAvatars) {
+                const label = document.createElement("label");
+                label.className = "avatar-option";
+                const input = document.createElement("input");
+                input.type = "radio";
+                input.name = "avatarId";
+                input.value = String(avatar.id);
+                input.required = true;
+                input.checked = Number(user.avatarId) === avatar.id;
+                const image = document.createElement("img");
+                image.src = avatar.imageUrl;
+                image.alt = "";
+                const title = document.createElement("span");
+                title.textContent = avatar.label;
+                label.append(input, image, title);
+                options.append(label);
+              }
+              const feedback = document.getElementById("avatar-picker-feedback");
+              feedback.textContent = "";
+              feedback.classList.remove("error");
+              document.getElementById("avatar-picker-dialog").showModal();
+            });
+            actionButtons.append(avatarButton);
+            if (user.role === "employee") {
+              const editButton = document.createElement("button");
+              editButton.className = "edit-user-button";
+              editButton.type = "button";
+              editButton.textContent = "Edit";
+              editButton.setAttribute("aria-label", `Edit ${user.display_name}`);
+              editButton.addEventListener("click", () => {
+                const form = document.getElementById("user-edit-form");
+                form.elements.id.value = user.id;
+                form.elements.displayName.value = user.display_name;
+                form.elements.username.value = user.username;
+                form.elements.password.value = "";
+                const feedback = document.getElementById("user-feedback");
+                feedback.textContent = "";
+                feedback.classList.remove("error");
+                document.getElementById("user-edit-dialog").showModal();
+                form.elements.displayName.focus();
+              });
+              actionButtons.append(editButton);
+            }
+            const removeButton = document.createElement("button");
+            removeButton.className = "delete-user-button";
+            removeButton.type = "button";
+            removeButton.textContent = "Delete";
+            removeButton.setAttribute("aria-label", `Delete ${user.display_name}`);
+            removeButton.disabled = Number(user.id) === Number(window.currentUserId) || user.role === "owner";
+            removeButton.addEventListener("click", async () => {
+              if (!window.confirm(`Delete the account for ${user.display_name}?`)) return;
+              removeButton.disabled = true;
+              try {
+                await requestJson("../api/users.php", {
+                  method: "DELETE",
+                  body: JSON.stringify({ id: Number(user.id) })
+                });
+                setUserFeedback("User deleted.");
+                await loadUsers();
+              } catch (error) {
+                setUserFeedback(error.message, true);
+                removeButton.disabled = false;
+              }
+            });
+            actionButtons.append(removeButton);
+            actionCell.append(actionButtons);
+            row.append(actionCell);
+            rows.append(row);
+          }
+        } catch (error) {
+          rows.replaceChildren();
+          const row = document.createElement("tr");
+          const cell = document.createElement("td");
+          cell.colSpan = 6;
+          cell.className = "empty-row";
+          cell.textContent = error.message;
+          row.append(cell);
+          rows.append(row);
+        }
+      }
+
+      window.loadAdminUsers = loadUsers;
+
+      document.getElementById("user-create-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const form = event.currentTarget;
+        const submit = form.querySelector("button[type=submit]");
+        const formData = new FormData(form);
+        submit.disabled = true;
+        const feedback = document.getElementById("user-feedback");
+        feedback.textContent = "";
+        feedback.classList.remove("error");
+        try {
+          await requestJson("../api/users.php", {
+            method: "POST",
+            body: JSON.stringify({
+              displayName: formData.get("displayName"),
+              username: formData.get("username"),
+              password: formData.get("password"),
+              role: formData.get("role"),
+              avatarId: Number(formData.get("avatarId"))
+            })
+          });
+          form.reset();
+          setUserFeedback("User added. The password is saved securely and will not be shown again.");
+          await loadUsers();
+        } catch (error) {
+          setUserFeedback(error.message, true);
+        } finally {
+          submit.disabled = false;
+        }
+      });
+
+      document.getElementById("cancel-edit-user").addEventListener("click", () => {
+        document.getElementById("user-edit-dialog").close();
+      });
+
+      document.getElementById("cancel-avatar-picker").addEventListener("click", () => {
+        document.getElementById("avatar-picker-dialog").close();
+      });
+
+      document.getElementById("avatar-picker-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (!selectedAvatarUser) return;
+        const form = event.currentTarget;
+        const submit = form.querySelector('button[type="submit"]');
+        const avatarId = Number(new FormData(form).get("avatarId"));
+        submit.disabled = true;
+        try {
+          await requestJson("../api/users.php", {
+            method: "PUT",
+            body: JSON.stringify({ id: Number(selectedAvatarUser.id), avatarId })
+          });
+          const avatar = availableAvatars.find(item => item.id === avatarId);
+          if (Number(selectedAvatarUser.id) === Number(window.currentUserId) && avatar) {
+            window.renderAdminProfile({
+              id: selectedAvatarUser.id,
+              displayName: selectedAvatarUser.display_name,
+              avatarUrl: avatar.imageUrl
+            });
+          }
+          document.getElementById("avatar-picker-dialog").close();
+          setUserFeedback(`Avatar updated for ${selectedAvatarUser.display_name}.`);
+          await loadUsers();
+        } catch (error) {
+          const feedback = document.getElementById("avatar-picker-feedback");
+          feedback.textContent = error.message;
+          feedback.classList.add("error");
+        } finally {
+          submit.disabled = false;
+        }
+      });
+
+      document.getElementById("user-edit-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const form = event.currentTarget;
+        const submit = form.querySelector('button[type="submit"]');
+        const formData = new FormData(form);
+        submit.disabled = true;
+        setUserFeedback("");
+        try {
+          await requestJson("../api/users.php", {
+            method: "PUT",
+            body: JSON.stringify({
+              id: Number(formData.get("id")),
+              displayName: formData.get("displayName"),
+              username: formData.get("username"),
+              password: formData.get("password")
+            })
+          });
+          document.getElementById("user-edit-dialog").close();
+          setUserFeedback("Employee updated.");
+          await loadUsers();
+        } catch (error) {
+          document.getElementById("edit-user-feedback").textContent = error.message;
+          document.getElementById("edit-user-feedback").classList.add("error");
+        } finally {
+          submit.disabled = false;
+        }
+      });
+
+      document.getElementById("logout-button").addEventListener("click", async (event) => {
+        const button = event.currentTarget;
+        button.disabled = true;
+        try {
+          await requestJson("../api/logout.php", { method: "POST", body: "{}" });
+          window.location.href = "Login.html";
+        } catch (error) {
+          document.getElementById("logout-feedback").textContent = error.message;
+          button.disabled = false;
+        }
+      });
+
+      async function initializeApp() {
+        try {
+          const result = await requestJson("../api/session.php");
+          csrfToken = result.csrfToken;
+          window.adminApprovalsCsrfToken = csrfToken;
+          window.currentUserId = result.user.id;
+          currentUserProfile = result.user;
+          updateEmployeeOfMonth(result.user.employeeOfMonth);
+          sessionReady = true;
+          showCurrentView();
+          void refreshSalesDashboard();
+          if ("BroadcastChannel" in window) {
+            salesChannel = new BroadcastChannel("smartstock-sales");
+            salesChannel.addEventListener("message", (event) => {
+              if (event.data?.type === "sale-completed") {
+                void refreshSalesDashboard();
+              }
+            });
+          }
+          window.addEventListener("storage", (event) => {
+            if (event.key === "smartstock-sale-completed" && event.newValue) {
+              void refreshSalesDashboard();
+            }
+          });
+          document.addEventListener("visibilitychange", () => {
+            if (!document.hidden) {
+              void refreshSalesDashboard();
+            }
+          });
+          window.setInterval(() => {
+            if (!document.hidden) {
+              void refreshSalesDashboard();
+            }
+          }, 5000);
+          document.body.classList.remove("auth-pending");
+        } catch (error) {
+          window.location.href = "Login.html?error=session";
+        }
+      }
+
+      initializeApp();
+    </script>
+  </body>
+</html>

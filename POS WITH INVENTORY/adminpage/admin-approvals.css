@@ -1,0 +1,46 @@
+.admin-approval-section {
+  margin: 0 0 22px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.admin-request-count {
+  padding: 5px 9px;
+  border-radius: 999px;
+  color: #25654a;
+  background: #e8f6ee;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.admin-request-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.admin-request-actions button {
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.approve-admin-request-button {
+  color: #25654a;
+  background: #e8f6ee;
+}
+
+.reject-admin-request-button {
+  color: #a52222;
+  background: #fff0ef;
+}
+
+.admin-request-actions button:disabled {
+  cursor: wait;
+  opacity: .65;
+}

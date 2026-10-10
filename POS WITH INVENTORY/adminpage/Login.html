@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login | SmartStock POS</title>
+    <link rel="stylesheet" href="../style.css?v=20261004-login-redesign">
+    <link rel="stylesheet" href="../page-transitions.css">
+</head>
+<body class="admin-login-page">
+    <div id="container">
+        <div id="logo">
+            <img src="../images/image.png" alt="SmartStock POS Logo">
+        </div>
+
+        <header class="login-heading">
+            <span class="login-eyebrow">ADMIN PORTAL</span>
+            <h1>Welcome back</h1>
+            <p>Sign in to manage your store.</p>
+        </header>
+
+        <form id="login-form" autocomplete="on">
+            <label class="login-field">
+                <span>Admin ID</span>
+                <input type="text" id="userId" name="username" placeholder="Enter your admin ID" autocomplete="username" required>
+            </label>
+            <label class="login-field">
+                <span>Password</span>
+                <input type="password" id="password" name="password" placeholder="Enter your password" autocomplete="current-password" required>
+            </label>
+            <p id="error" role="alert" style="color:#c0392b; display:none; margin:0;"></p>
+            <button type="submit">Login</button>
+        </form>
+
+        <nav class="login-actions" aria-label="More login options">
+            <a class="setup-link" href="../setup.php">
+                <span class="setup-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false">
+                        <path d="M12 5v14M5 12h14"></path>
+                    </svg>
+                </span>
+                <span class="setup-link-copy">
+                    <strong>First-time setup</strong>
+                    <small>Create an employee account or request admin access</small>
+                </span>
+                <span class="setup-arrow" aria-hidden="true">›</span>
+            </a>
+            <a class="back-link" href="runfromhere.html">
+                <span aria-hidden="true">←</span>
+                <span>BACK TO HOMEPAGE</span>
+            </a>
+        </nav>
+    </div>
+
+    <script>
+        const NEXT_PAGE = "admindashboard.html";
+        const isLiveServer = ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname) && window.location.port === "5500";
+        if (isLiveServer) {
+            const appPath = window.location.pathname.startsWith("/SmartStockPOS/")
+                ? window.location.pathname
+                : `/SmartStockPOS${window.location.pathname}`;
+            window.location.replace(`http://localhost${appPath}${window.location.search}${window.location.hash}`);
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        const error = document.getElementById("error");
+        if (params.has("error")) {
+            error.textContent = "Your session ended or the server could not verify your login. Please sign in again.";
+            error.style.display = "block";
+        }
+        if (params.get("setup") === "pending") {
+            error.textContent = "Administrator access request submitted. An existing admin must approve it before you can sign in.";
+            error.style.color = "#26734d";
+            error.style.display = "block";
+        } else if (params.has("setup")) {
+            error.textContent = "Administrator account created. Sign in with the credentials you just set.";
+            error.style.color = "#26734d";
+            error.style.display = "block";
+        }
+
+        document.getElementById("login-form").addEventListener("submit", async function (e) {
+            e.preventDefault();
+            const id = document.getElementById("userId").value.trim();
+            const pw = document.getElementById("password").value;
+            const button = this.querySelector("button[type=submit]");
+            error.style.display = "none";
+            button.disabled = true;
+            try {
+                const response = await fetch("../api/login.php", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json"
+                    },
+                    credentials: "same-origin",
+                    body: JSON.stringify({ username: id, password: pw })
+                });
+                const contentType = response.headers.get("content-type") || "";
+                if (!contentType.includes("application/json")) {
+                    throw new Error(`The login endpoint did not return JSON (HTTP ${response.status}). Open this page through XAMPP Apache at http://localhost/SmartStockPOS/.`);
+                }
+                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(result.error || "Unable to sign in.");
+                }
+                window.location.href = NEXT_PAGE;
+            } catch (requestError) {
+                error.textContent = requestError.message || "Unable to reach the server. Open this page through XAMPP Apache.";
+                error.style.display = "block";
+            } finally {
+                button.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
